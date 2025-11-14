@@ -15,11 +15,6 @@ import (
 	strictnethttp "github.com/oapi-codegen/runtime/strictmiddleware/nethttp"
 )
 
-const (
-	AdminTokenScopes = "AdminToken.Scopes"
-	UserTokenScopes  = "UserToken.Scopes"
-)
-
 // Defines values for ErrorResponseErrorCode.
 const (
 	NOCANDIDATE ErrorResponseErrorCode = "NO_CANDIDATE"
@@ -240,12 +235,6 @@ type MiddlewareFunc func(http.Handler) http.Handler
 // PostPullRequestCreate operation middleware
 func (siw *ServerInterfaceWrapper) PostPullRequestCreate(w http.ResponseWriter, r *http.Request) {
 
-	ctx := r.Context()
-
-	ctx = context.WithValue(ctx, AdminTokenScopes, []string{})
-
-	r = r.WithContext(ctx)
-
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.PostPullRequestCreate(w, r)
 	}))
@@ -260,12 +249,6 @@ func (siw *ServerInterfaceWrapper) PostPullRequestCreate(w http.ResponseWriter, 
 // PostPullRequestMerge operation middleware
 func (siw *ServerInterfaceWrapper) PostPullRequestMerge(w http.ResponseWriter, r *http.Request) {
 
-	ctx := r.Context()
-
-	ctx = context.WithValue(ctx, AdminTokenScopes, []string{})
-
-	r = r.WithContext(ctx)
-
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.PostPullRequestMerge(w, r)
 	}))
@@ -279,12 +262,6 @@ func (siw *ServerInterfaceWrapper) PostPullRequestMerge(w http.ResponseWriter, r
 
 // PostPullRequestReassign operation middleware
 func (siw *ServerInterfaceWrapper) PostPullRequestReassign(w http.ResponseWriter, r *http.Request) {
-
-	ctx := r.Context()
-
-	ctx = context.WithValue(ctx, AdminTokenScopes, []string{})
-
-	r = r.WithContext(ctx)
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.PostPullRequestReassign(w, r)
@@ -315,14 +292,6 @@ func (siw *ServerInterfaceWrapper) PostTeamAdd(w http.ResponseWriter, r *http.Re
 func (siw *ServerInterfaceWrapper) GetTeamGet(w http.ResponseWriter, r *http.Request) {
 
 	var err error
-
-	ctx := r.Context()
-
-	ctx = context.WithValue(ctx, AdminTokenScopes, []string{})
-
-	ctx = context.WithValue(ctx, UserTokenScopes, []string{})
-
-	r = r.WithContext(ctx)
 
 	// Parameter object where we will unmarshal all parameters from the context
 	var params GetTeamGetParams
@@ -358,14 +327,6 @@ func (siw *ServerInterfaceWrapper) GetUsersGetReview(w http.ResponseWriter, r *h
 
 	var err error
 
-	ctx := r.Context()
-
-	ctx = context.WithValue(ctx, AdminTokenScopes, []string{})
-
-	ctx = context.WithValue(ctx, UserTokenScopes, []string{})
-
-	r = r.WithContext(ctx)
-
 	// Parameter object where we will unmarshal all parameters from the context
 	var params GetUsersGetReviewParams
 
@@ -397,12 +358,6 @@ func (siw *ServerInterfaceWrapper) GetUsersGetReview(w http.ResponseWriter, r *h
 
 // PostUsersSetIsActive operation middleware
 func (siw *ServerInterfaceWrapper) PostUsersSetIsActive(w http.ResponseWriter, r *http.Request) {
-
-	ctx := r.Context()
-
-	ctx = context.WithValue(ctx, AdminTokenScopes, []string{})
-
-	r = r.WithContext(ctx)
 
 	handler := http.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		siw.Handler.PostUsersSetIsActive(w, r)
@@ -747,15 +702,6 @@ type PostUsersSetIsActive200JSONResponse struct {
 func (response PostUsersSetIsActive200JSONResponse) VisitPostUsersSetIsActiveResponse(w http.ResponseWriter) error {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
-
-	return json.NewEncoder(w).Encode(response)
-}
-
-type PostUsersSetIsActive401JSONResponse ErrorResponse
-
-func (response PostUsersSetIsActive401JSONResponse) VisitPostUsersSetIsActiveResponse(w http.ResponseWriter) error {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(401)
 
 	return json.NewEncoder(w).Encode(response)
 }
