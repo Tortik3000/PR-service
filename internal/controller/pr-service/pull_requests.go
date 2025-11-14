@@ -51,7 +51,6 @@ func (p *prService) PostPullRequestMerge(
 ) (generated.PostPullRequestMergeResponseObject, error) {
 	body := request.Body
 	// body == nil
-	// validation
 
 	pr, err := p.pullRequestUseCase.PullRequestMerge(ctx, body.PullRequestId)
 	if err != nil {
@@ -97,7 +96,8 @@ func (p *prService) PostPullRequestReassign(
 			return generated.PostPullRequestReassign409JSONResponse{
 				Error: newErrorResponse(generated.NOTASSIGNED, err.Error()).Error,
 			}, nil
-		case errors.Is(err, modelsErr.ErrNotActive):
+
+		case errors.Is(err, modelsErr.ErrNotCandidate):
 			return generated.PostPullRequestReassign409JSONResponse{
 				Error: newErrorResponse(generated.NOCANDIDATE, err.Error()).Error,
 			}, nil

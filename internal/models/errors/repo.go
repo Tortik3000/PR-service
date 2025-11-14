@@ -13,5 +13,5 @@ var (
 	ErrPRMerged     = errors.New("pr already merged")
 	ErrNotActive    = errors.New("not active candidate")
 	ErrNotAssigned  = errors.New("the user was not assigned as a reviewer for this PR")
-	ErrNotCandidate = errors.New("not candidate")
+	ErrNotCandidate = errors.New("no active replacement candidate in team")
 )

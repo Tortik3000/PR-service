@@ -10,12 +10,16 @@ import (
 	"time"
 
 	"github.com/Tortik3000/PR-service/db"
-	api "github.com/Tortik3000/PR-service/generated/api/pr-service"
+	"github.com/getkin/kin-openapi/openapi3"
+	"github.com/getkin/kin-openapi/openapi3filter"
+	"github.com/getkin/kin-openapi/routers"
+	"github.com/getkin/kin-openapi/routers/gorillamux"
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
 
 	"github.com/Tortik3000/PR-service/config"
+	api "github.com/Tortik3000/PR-service/generated/api/pr-service"
 	controller "github.com/Tortik3000/PR-service/internal/controller/pr-service"
 	repositury "github.com/Tortik3000/PR-service/internal/repository/pr-service"
 	usecase "github.com/Tortik3000/PR-service/internal/usecase/pr-service"
@@ -66,8 +70,24 @@ func Run(
 	ctrl := controller.NewPRService(logger, useCases, useCases, useCases)
 	r := chi.NewMux()
 
-	middlewares := make([]api.StrictMiddlewareFunc, 0) // todo validation
-	serverInterface := api.NewStrictHandler(ctrl, middlewares)
+	loader := openapi3.NewLoader()
+	doc, err := loader.LoadFromFile("api/pr-service/pr-service.yml")
+	if err != nil {
+		logger.Fatal("Failed to load OpenAPI spec", zap.Error(err))
+	}
+
+	if err = doc.Validate(context.Background()); err != nil {
+		logger.Fatal("OpenAPI spec validation failed", zap.Error(err))
+	}
+
+	router, err := gorillamux.NewRouter(doc)
+	if err != nil {
+		return
+	}
+
+	r.Use(OpenAPIValidatorMiddleware(router))
+
+	serverInterface := api.NewStrictHandler(ctrl, nil)
 	h := api.HandlerFromMux(serverInterface, r)
 
 	srv := &http.Server{
@@ -139,4 +159,29 @@ func initDBPool(cfg *config.Config, logger *zap.Logger) *pgxpool.Pool {
 
 	logger.Info("Database connection pool established")
 	return dbPool
+}
+
+func OpenAPIValidatorMiddleware(router routers.Router) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			route, pathParams, err := router.FindRoute(r)
+			if err != nil {
+				http.Error(w, "Route not found", http.StatusNotFound)
+				return
+			}
+
+			requestValidationInput := &openapi3filter.RequestValidationInput{
+				Request:    r,
+				PathParams: pathParams,
+				Route:      route,
+			}
+
+			if err = openapi3filter.ValidateRequest(r.Context(), requestValidationInput); err != nil {
+				http.Error(w, "Invalid request: "+err.Error(), http.StatusBadRequest)
+				return
+			}
+
+			next.ServeHTTP(w, r)
+		})
+	}
 }

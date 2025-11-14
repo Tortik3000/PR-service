@@ -7,7 +7,6 @@ import (
 
 	sq "github.com/Masterminds/squirrel"
 	modelsErr "github.com/Tortik3000/PR-service/internal/models/errors"
-
 	pr "github.com/Tortik3000/PR-service/internal/models/pull_request"
 	"github.com/Tortik3000/PR-service/internal/models/user"
 )
@@ -80,13 +79,11 @@ func (p *postgresRepo) SetIsActive(
 	updateActive := sq.Update("users").
 		Set("is_active", isActive).
 		Where(sq.Eq{"id": userId}).
-		Suffix("RETURNING name, team_id")
+		Suffix("RETURNING name, team_id").
+		PlaceholderFormat(sq.Dollar)
 
-	updateActiveStr, args, err := updateActive.PlaceholderFormat(sq.Dollar).ToSql()
+	updateActiveStr, args, err := updateActive.ToSql()
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, modelsErr.ErrUserNotFound
-		}
 		return nil, err
 	}
 
@@ -99,6 +96,9 @@ func (p *postgresRepo) SetIsActive(
 	)
 
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, modelsErr.ErrUserNotFound
+		}
 		return nil, err
 	}
 
