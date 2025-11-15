@@ -1,8 +1,8 @@
-package team
+package models
 
 type Team struct {
-	Members  []Member
-	TeamName string
+	Members []Member
+	Name    string
 }
 
 type Member struct {

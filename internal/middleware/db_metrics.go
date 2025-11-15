@@ -4,9 +4,7 @@ import (
 	"context"
 	"time"
 
-	pr "github.com/Tortik3000/PR-service/internal/models/pull_request"
-	"github.com/Tortik3000/PR-service/internal/models/team"
-	"github.com/Tortik3000/PR-service/internal/models/user"
+	"github.com/Tortik3000/PR-service/internal/models"
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -40,20 +38,20 @@ func observeNoResult(histogram *prometheus.HistogramVec, operation string, fn fu
 	return err
 }
 
-func (m *middlewareMetricsRepo) PullRequestCreate(ctx context.Context, authorID, prID, prName string, reviewers []string) (*pr.DBPullRequest, error) {
-	return observe(m.histogram, "PullRequestCreate", func() (*pr.DBPullRequest, error) {
+func (m *middlewareMetricsRepo) PullRequestCreate(ctx context.Context, authorID, prID, prName string, reviewers []string) (*models.PR, error) {
+	return observe(m.histogram, "PullRequestCreate", func() (*models.PR, error) {
 		return m.next.PullRequestCreate(ctx, authorID, prID, prName, reviewers)
 	})
 }
 
-func (m *middlewareMetricsRepo) PullRequestMerge(ctx context.Context, prID string) (*pr.DBPullRequest, error) {
-	return observe(m.histogram, "PullRequestMerge", func() (*pr.DBPullRequest, error) {
+func (m *middlewareMetricsRepo) PullRequestMerge(ctx context.Context, prID string) (*models.PR, error) {
+	return observe(m.histogram, "PullRequestMerge", func() (*models.PR, error) {
 		return m.next.PullRequestMerge(ctx, prID)
 	})
 }
 
-func (m *middlewareMetricsRepo) GetPullRequest(ctx context.Context, prID string) (*pr.DBPullRequest, error) {
-	return observe(m.histogram, "GetPullRequest", func() (*pr.DBPullRequest, error) {
+func (m *middlewareMetricsRepo) GetPullRequest(ctx context.Context, prID string) (*models.PR, error) {
+	return observe(m.histogram, "GetPullRequest", func() (*models.PR, error) {
 		return m.next.GetPullRequest(ctx, prID)
 	})
 }
@@ -76,26 +74,26 @@ func (m *middlewareMetricsRepo) GetActiveTeammates(ctx context.Context, teamID s
 	})
 }
 
-func (m *middlewareMetricsRepo) TeamAdd(ctx context.Context, team *team.DBTeam) error {
+func (m *middlewareMetricsRepo) TeamAdd(ctx context.Context, team models.Team) error {
 	return observeNoResult(m.histogram, "TeamAdd", func() error {
 		return m.next.TeamAdd(ctx, team)
 	})
 }
 
-func (m *middlewareMetricsRepo) TeamGet(ctx context.Context, teamName string) (*team.DBTeam, error) {
-	return observe(m.histogram, "TeamGet", func() (*team.DBTeam, error) {
+func (m *middlewareMetricsRepo) TeamGet(ctx context.Context, teamName string) (*models.Team, error) {
+	return observe(m.histogram, "TeamGet", func() (*models.Team, error) {
 		return m.next.TeamGet(ctx, teamName)
 	})
 }
 
-func (m *middlewareMetricsRepo) GetReview(ctx context.Context, userID string) ([]pr.DBPullRequestShort, error) {
-	return observe(m.histogram, "GetReview", func() ([]pr.DBPullRequestShort, error) {
+func (m *middlewareMetricsRepo) GetReview(ctx context.Context, userID string) ([]models.PRShort, error) {
+	return observe(m.histogram, "GetReview", func() ([]models.PRShort, error) {
 		return m.next.GetReview(ctx, userID)
 	})
 }
 
-func (m *middlewareMetricsRepo) SetIsActive(ctx context.Context, userId string, isActive bool) (*user.DBUser, error) {
-	return observe(m.histogram, "SetIsActive", func() (*user.DBUser, error) {
+func (m *middlewareMetricsRepo) SetIsActive(ctx context.Context, userId string, isActive bool) (*models.User, error) {
+	return observe(m.histogram, "SetIsActive", func() (*models.User, error) {
 		return m.next.SetIsActive(ctx, userId, isActive)
 	})
 }

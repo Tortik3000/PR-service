@@ -3,28 +3,28 @@ package pr_service
 import (
 	"context"
 
+	"github.com/Tortik3000/PR-service/internal/models"
 	modelsErr "github.com/Tortik3000/PR-service/internal/models/errors"
-	models "github.com/Tortik3000/PR-service/internal/models/pull_request"
 )
 
 func (u *useCase) PullRequestCreate(
 	ctx context.Context,
 	authorID, prID, prName string,
 ) (*models.PR, error) {
-	var dbPR *models.DBPullRequest
+	var pr *models.PR
 	err := u.transactor.WithTx(ctx, func(ctx context.Context) error {
-		teamID, err := u.pullRequestsRepository.GetTeamIDByUserID(ctx, authorID)
+		teamID, err := u.teamRepository.GetTeamIDByUserID(ctx, authorID)
 		if err != nil {
 			return err
 		}
 
 		excludedUsers := []string{authorID}
-		teammates, err := u.pullRequestsRepository.GetActiveTeammates(ctx, teamID, excludedUsers, 2)
+		teammates, err := u.teamRepository.GetActiveTeammates(ctx, teamID, excludedUsers, 2)
 		if err != nil {
 			return err
 		}
 
-		dbPR, err = u.pullRequestsRepository.PullRequestCreate(ctx, authorID, prID, prName, teammates)
+		pr, err = u.pullRequestsRepository.PullRequestCreate(ctx, authorID, prID, prName, teammates)
 		if err != nil {
 			return err
 		}
@@ -36,40 +36,40 @@ func (u *useCase) PullRequestCreate(
 		return nil, err
 	}
 
-	return models.FromDB(dbPR), nil
+	return pr, nil
 }
 
 func (u *useCase) PullRequestMerge(
 	ctx context.Context,
 	prID string,
 ) (*models.PR, error) {
-	dbPR, err := u.pullRequestsRepository.PullRequestMerge(ctx, prID)
+	pr, err := u.pullRequestsRepository.PullRequestMerge(ctx, prID)
 	if err != nil {
 		return nil, err
 	}
 
-	return models.FromDB(dbPR), nil
+	return pr, nil
 }
 
 func (u *useCase) PullRequestReassign(
 	ctx context.Context,
 	prID, oldReviewerID string,
 ) (*models.PR, string, error) {
-	var dbPR *models.DBPullRequest
+	var pr *models.PR
 	var newReviewerID string
 
 	err := u.transactor.WithTx(ctx, func(ctx context.Context) error {
-		teamID, err := u.pullRequestsRepository.GetTeamIDByUserID(ctx, oldReviewerID)
+		teamID, err := u.teamRepository.GetTeamIDByUserID(ctx, oldReviewerID)
 		if err != nil {
 			return err
 		}
 
-		dbPR, err = u.pullRequestsRepository.GetPullRequest(ctx, prID)
+		pr, err = u.pullRequestsRepository.GetPullRequest(ctx, prID)
 		if err != nil {
 			return err
 		}
 		wasReviewer := false
-		for _, reviewerID := range dbPR.AssignedReviewers {
+		for _, reviewerID := range pr.AssignedReviewers {
 			if reviewerID == oldReviewerID {
 				wasReviewer = true
 			}
@@ -77,10 +77,10 @@ func (u *useCase) PullRequestReassign(
 		if !wasReviewer {
 			return modelsErr.ErrNotAssigned
 		}
-		excludedUsers := []string{dbPR.AuthorID}
-		excludedUsers = append(excludedUsers, dbPR.AssignedReviewers...)
+		excludedUsers := []string{pr.AuthorID}
+		excludedUsers = append(excludedUsers, pr.AssignedReviewers...)
 
-		teammates, err := u.pullRequestsRepository.GetActiveTeammates(ctx, teamID, excludedUsers, 1)
+		teammates, err := u.teamRepository.GetActiveTeammates(ctx, teamID, excludedUsers, 1)
 		if err != nil {
 			return err
 		}
@@ -96,13 +96,13 @@ func (u *useCase) PullRequestReassign(
 		}
 
 		newReviewers := []string{newReviewerID}
-		for _, reviewer := range dbPR.AssignedReviewers {
+		for _, reviewer := range pr.AssignedReviewers {
 			if reviewer != oldReviewerID {
 				newReviewers = append(newReviewers, reviewer)
 			}
 		}
 
-		dbPR.AssignedReviewers = newReviewers
+		pr.AssignedReviewers = newReviewers
 
 		return nil
 	})
@@ -111,5 +111,5 @@ func (u *useCase) PullRequestReassign(
 		return nil, "", err
 	}
 
-	return models.FromDB(dbPR), newReviewerID, nil
+	return pr, newReviewerID, nil
 }

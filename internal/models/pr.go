@@ -1,8 +1,10 @@
-package pull_request
+package models
 
-import "time"
+import (
+	"time"
+)
 
-type DBPullRequest struct {
+type PR struct {
 	AssignedReviewers []string
 	AuthorID          string
 	CreatedAt         *time.Time
@@ -12,9 +14,16 @@ type DBPullRequest struct {
 	Status            PRStatus
 }
 
-type DBPullRequestShort struct {
+type PRShort struct {
 	AuthorID string
 	ID       string
 	Name     string
 	Status   PRStatus
 }
+
+type PRStatus int
+
+const (
+	PRStatusOPEN PRStatus = iota
+	PRStatusMERGED
+)

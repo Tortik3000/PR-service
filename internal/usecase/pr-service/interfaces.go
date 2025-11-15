@@ -3,30 +3,29 @@ package pr_service
 import (
 	"context"
 
-	pr "github.com/Tortik3000/PR-service/internal/models/pull_request"
-	"github.com/Tortik3000/PR-service/internal/models/team"
-	"github.com/Tortik3000/PR-service/internal/models/user"
+	"github.com/Tortik3000/PR-service/internal/models"
+
 	"go.uber.org/zap"
 )
 
 type (
 	userRepository interface {
-		GetReview(ctx context.Context, userID string) ([]pr.DBPullRequestShort, error)
-		SetIsActive(ctx context.Context, userID string, isActive bool) (*user.DBUser, error)
+		GetReview(ctx context.Context, userID string) ([]models.PRShort, error)
+		SetIsActive(ctx context.Context, userID string, isActive bool) (*models.User, error)
 	}
 
 	teamRepository interface {
-		TeamAdd(ctx context.Context, team *team.DBTeam) error
-		TeamGet(ctx context.Context, teamName string) (*team.DBTeam, error)
+		TeamAdd(ctx context.Context, team models.Team) error
+		TeamGet(ctx context.Context, teamName string) (*models.Team, error)
+		GetActiveTeammates(ctx context.Context, teamID string, excludedUsers []string, count uint64) ([]string, error)
+		GetTeamIDByUserID(ctx context.Context, userID string) (teamID string, err error)
 	}
 
 	pullRequestsRepository interface {
-		PullRequestCreate(ctx context.Context, authorID, prID, prName string, teammates []string) (*pr.DBPullRequest, error)
-		PullRequestMerge(ctx context.Context, prID string) (*pr.DBPullRequest, error)
+		PullRequestCreate(ctx context.Context, authorID, prID, prName string, teammates []string) (*models.PR, error)
+		PullRequestMerge(ctx context.Context, prID string) (*models.PR, error)
 		PullRequestReassign(ctx context.Context, prID, oldReviewerID, newReviewerID string) error
-		GetActiveTeammates(ctx context.Context, teamID string, excludedUsers []string, count uint64) ([]string, error)
-		GetTeamIDByUserID(ctx context.Context, userID string) (teamID string, err error)
-		GetPullRequest(ctx context.Context, prID string) (*pr.DBPullRequest, error)
+		GetPullRequest(ctx context.Context, prID string) (*models.PR, error)
 	}
 
 	transactor interface {

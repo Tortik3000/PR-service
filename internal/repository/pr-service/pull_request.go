@@ -7,8 +7,8 @@ import (
 	"time"
 
 	sq "github.com/Masterminds/squirrel"
+	"github.com/Tortik3000/PR-service/internal/models"
 	modelsErr "github.com/Tortik3000/PR-service/internal/models/errors"
-	pr "github.com/Tortik3000/PR-service/internal/models/pull_request"
 	"github.com/jackc/pgx/v5/pgconn"
 )
 
@@ -16,17 +16,17 @@ func (p *postgresRepo) PullRequestCreate(
 	ctx context.Context,
 	authorID, prID, prName string,
 	reviewers []string,
-) (dbPR *pr.DBPullRequest, txErr error) {
+) (pr *models.PR, txErr error) {
 	tx, rollback, err := p.beginTx(ctx)
 	if err != nil {
 		return nil, err
 	}
 	defer rollback(txErr)
 
-	createPR := sq.Insert("pull_request").
+	createPR := p.queryBuilder.Insert("pull_request").
 		Columns("id", "name", "author_id").
 		Values(prID, prName, authorID).
-		Suffix("RETURNING created_at").PlaceholderFormat(sq.Dollar)
+		Suffix("RETURNING created_at")
 
 	createPRStr, args, err := createPR.ToSql()
 	if err != nil {
@@ -43,9 +43,8 @@ func (p *postgresRepo) PullRequestCreate(
 		return nil, err
 	}
 
-	updateAssignedReviewers := sq.Insert("assigned_reviewer").
-		Columns("user_id", "pr_id").
-		PlaceholderFormat(sq.Dollar)
+	updateAssignedReviewers := p.queryBuilder.Insert("assigned_reviewer").
+		Columns("user_id", "pr_id")
 
 	for _, reviewerID := range reviewers {
 		updateAssignedReviewers = updateAssignedReviewers.
@@ -62,36 +61,35 @@ func (p *postgresRepo) PullRequestCreate(
 		return nil, err
 	}
 
-	dbPR = &pr.DBPullRequest{
+	pr = &models.PR{
 		ID:                prID,
 		Name:              prName,
 		AuthorID:          authorID,
 		AssignedReviewers: reviewers,
 		CreatedAt:         createdAt,
-		Status:            pr.OPEN,
+		Status:            models.PRStatusOPEN,
 	}
 
-	return dbPR, nil
+	return pr, nil
 }
 
 func (p *postgresRepo) PullRequestMerge(
 	ctx context.Context,
 	prID string,
-) (*pr.DBPullRequest, error) {
-	updateStatus := sq.Update("pull_request").
-		Set("status", 1).
+) (*models.PR, error) {
+	updateStatus := p.queryBuilder.Update("pull_request").
+		Set("status", models.PRStatusMERGED).
 		SetMap(map[string]interface{}{
 			"merged_at": sq.Expr("COALESCE(merged_at, ?)", time.Now())}).
 		Where(sq.Eq{"id": prID}).
-		Suffix("RETURNING id, name, author_id, created_at, merged_at, status").
-		PlaceholderFormat(sq.Dollar)
+		Suffix("RETURNING id, name, author_id, created_at, merged_at, status")
 
 	updateStatusStr, args, err := updateStatus.ToSql()
 	if err != nil {
 		return nil, err
 	}
 
-	var dbPr pr.DBPullRequest
+	var dbPr models.PR
 	err = p.db.QueryRow(ctx, updateStatusStr, args...).Scan(
 		&dbPr.ID,
 		&dbPr.Name,
@@ -114,29 +112,36 @@ func (p *postgresRepo) PullRequestMerge(
 func (p *postgresRepo) GetPullRequest(
 	ctx context.Context,
 	prID string,
-) (dbPR *pr.DBPullRequest, txErr error) {
+) (pr *models.PR, txErr error) {
 	tx, rollback, err := p.beginTx(ctx)
 	if err != nil {
 		return nil, err
 	}
 	defer rollback(txErr)
-	getPR := sq.Select("id", "name", "author_id", "created_at", "merged_at", "status").
+	getPR := p.queryBuilder.Select(
+		"id",
+		"name",
+		"author_id",
+		"created_at",
+		"merged_at",
+		"status",
+	).
 		From("pull_request").
-		Where(sq.Eq{"id": prID}).PlaceholderFormat(sq.Dollar)
+		Where(sq.Eq{"id": prID})
 
 	getPRSql, args, err := getPR.ToSql()
 	if err != nil {
 		return nil, err
 	}
 
-	dbPR = &pr.DBPullRequest{}
+	pr = &models.PR{}
 	err = tx.QueryRow(ctx, getPRSql, args...).Scan(
-		&dbPR.ID,
-		&dbPR.Name,
-		&dbPR.AuthorID,
-		&dbPR.CreatedAt,
-		&dbPR.MergedAt,
-		&dbPR.Status,
+		&pr.ID,
+		&pr.Name,
+		&pr.AuthorID,
+		&pr.CreatedAt,
+		&pr.MergedAt,
+		&pr.Status,
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -145,14 +150,13 @@ func (p *postgresRepo) GetPullRequest(
 		return nil, err
 	}
 
-	if dbPR.Status == pr.MERGED {
+	if pr.Status == models.PRStatusMERGED {
 		return nil, modelsErr.ErrPRMerged
 	}
 
-	getReviewers := sq.Select("user_id").
+	getReviewers := p.queryBuilder.Select("user_id").
 		From("assigned_reviewer").
-		Where(sq.Eq{"pr_id": prID}).
-		PlaceholderFormat(sq.Dollar)
+		Where(sq.Eq{"pr_id": prID})
 
 	getReviewersStr, args, err := getReviewers.ToSql()
 	if err != nil {
@@ -170,10 +174,10 @@ func (p *postgresRepo) GetPullRequest(
 		if err != nil {
 			return nil, err
 		}
-		dbPR.AssignedReviewers = append(dbPR.AssignedReviewers, reviewer)
+		pr.AssignedReviewers = append(pr.AssignedReviewers, reviewer)
 	}
 
-	return dbPR, nil
+	return pr, nil
 }
 func (p *postgresRepo) PullRequestReassign(
 	ctx context.Context,
@@ -185,13 +189,12 @@ func (p *postgresRepo) PullRequestReassign(
 	}
 	defer rollback(txErr)
 
-	updateReviewers := sq.Update("assigned_reviewer").
+	updateReviewers := p.queryBuilder.Update("assigned_reviewer").
 		Set("user_id", newReviewerID).
 		Where(sq.And{
 			sq.Eq{"user_id": oldReviewerID},
 			sq.Eq{"pr_id": prID},
-		}).
-		PlaceholderFormat(sq.Dollar)
+		})
 
 	updateReviewersStr, args, err := updateReviewers.ToSql()
 	if err != nil {
@@ -204,77 +207,4 @@ func (p *postgresRepo) PullRequestReassign(
 	}
 
 	return nil
-}
-
-func (p *postgresRepo) GetTeamIDByUserID(
-	ctx context.Context,
-	userID string,
-) (teamID string, err error) {
-	getTeamID := sq.Select("team_id").
-		From("users").
-		Where(sq.Eq{"id": userID}).PlaceholderFormat(sq.Dollar)
-
-	getTeamIDStr, args, err := getTeamID.ToSql()
-	if err != nil {
-		return "", err
-	}
-
-	err = p.db.QueryRow(ctx, getTeamIDStr, args...).Scan(&teamID)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return "", modelsErr.ErrUserNotFound
-		}
-		return "", err
-	}
-	if teamID == "" {
-		return "", modelsErr.ErrTeamNotFound
-	}
-
-	return teamID, nil
-}
-
-func (p *postgresRepo) GetActiveTeammates(
-	ctx context.Context,
-	teamID string,
-	excludedUsers []string,
-	count uint64,
-) (teammateIDs []string, txErr error) {
-	tx, rollback, err := p.beginTx(ctx)
-	if err != nil {
-		return nil, err
-	}
-	defer rollback(txErr)
-
-	getTeammate := sq.Select("id").
-		From("users").
-		Where(
-			sq.And{
-				sq.Eq{"team_id": teamID},
-				sq.Eq{"is_active": true},
-				sq.NotEq{"id": excludedUsers},
-			},
-		).
-		Limit(count).
-		Suffix("FOR UPDATE").PlaceholderFormat(sq.Dollar)
-	
-	getTeammateStr, args, err := getTeammate.ToSql()
-	if err != nil {
-		return nil, err
-	}
-
-	rows, err := tx.Query(ctx, getTeammateStr, args...)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var userID string
-		if err = rows.Scan(&userID); err != nil {
-			return nil, err
-		}
-		teammateIDs = append(teammateIDs, userID)
-	}
-
-	return teammateIDs, nil
 }

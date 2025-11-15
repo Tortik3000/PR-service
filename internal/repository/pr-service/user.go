@@ -6,20 +6,23 @@ import (
 	"errors"
 
 	sq "github.com/Masterminds/squirrel"
+	"github.com/Tortik3000/PR-service/internal/models"
 	modelsErr "github.com/Tortik3000/PR-service/internal/models/errors"
-	pr "github.com/Tortik3000/PR-service/internal/models/pull_request"
-	"github.com/Tortik3000/PR-service/internal/models/user"
 )
 
 func (p *postgresRepo) GetReview(
 	ctx context.Context,
 	userID string,
-) ([]pr.DBPullRequestShort, error) {
-	getPRs := sq.Select("pr.id", "pr.name", "pr.author_id", "pr.status").
+) ([]models.PRShort, error) {
+	getPRs := p.queryBuilder.Select(
+		"pr.id",
+		"pr.name",
+		"pr.author_id",
+		"pr.status",
+	).
 		From("assigned_reviewer ar").
 		Join("pull_request pr ON ar.pr_id = pr.id").
-		Where(sq.Eq{"ar.user_id": userID}).
-		PlaceholderFormat(sq.Dollar)
+		Where(sq.Eq{"ar.user_id": userID})
 
 	getPRsStr, args, err := getPRs.ToSql()
 	if err != nil {
@@ -32,9 +35,9 @@ func (p *postgresRepo) GetReview(
 	}
 	defer rows.Close()
 
-	var prs []pr.DBPullRequestShort
+	var prs []models.PRShort
 	for rows.Next() {
-		var dbPR pr.DBPullRequestShort
+		var dbPR models.PRShort
 		if err = rows.Scan(
 			&dbPR.ID,
 			&dbPR.Name,
@@ -53,24 +56,23 @@ func (p *postgresRepo) SetIsActive(
 	ctx context.Context,
 	userId string,
 	isActive bool,
-) (*user.DBUser, error) {
-	setIsActive := sq.Update("users").
+) (*models.User, error) {
+	setIsActive := p.queryBuilder.Update("users").
 		Set("is_active", isActive).
 		Where(sq.Eq{"id": userId}).
-		Suffix("RETURNING name, team_id").
-		PlaceholderFormat(sq.Dollar)
+		Suffix("RETURNING name, team_id")
 
 	setIsActiveStr, args, err := setIsActive.ToSql()
 	if err != nil {
 		return nil, err
 	}
 
-	var dbUser user.DBUser
-	dbUser.ID = userId
-	dbUser.IsActive = isActive
+	var user models.User
+	user.ID = userId
+	user.IsActive = isActive
 	err = p.db.QueryRow(ctx, setIsActiveStr, args...).Scan(
-		&dbUser.Name,
-		&dbUser.TeamName,
+		&user.Name,
+		&user.TeamName,
 	)
 
 	if err != nil {
@@ -80,5 +82,5 @@ func (p *postgresRepo) SetIsActive(
 		return nil, err
 	}
 
-	return &dbUser, nil
+	return &user, nil
 }

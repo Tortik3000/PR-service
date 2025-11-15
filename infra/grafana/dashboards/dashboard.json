@@ -1,32 +1,4 @@
 {
-  "__inputs": [],
-  "__elements": {},
-  "__requires": [
-    {
-      "type": "grafana",
-      "id": "grafana",
-      "name": "Grafana",
-      "version": "10.0.0"
-    },
-    {
-      "type": "datasource",
-      "id": "prometheus",
-      "name": "Prometheus",
-      "version": "1.0.0"
-    },
-    {
-      "type": "panel",
-      "id": "timeseries",
-      "name": "Time series",
-      "version": ""
-    },
-    {
-      "type": "panel",
-      "id": "stat",
-      "name": "Stat",
-      "version": ""
-    }
-  ],
   "annotations": {
     "list": [
       {
@@ -46,24 +18,19 @@
   "editable": true,
   "fiscalYearStartMonth": 0,
   "graphTooltip": 0,
-  "id": null,
+  "id": 1,
   "links": [],
-  "liveNow": false,
   "panels": [
     {
       "datasource": {
         "type": "prometheus",
         "uid": "ds-prometheus-1"
       },
-      "description": "Соответствие SLI времени ответа (300 мс) по эндпоинтам",
+      "description": "Соответствие SLI времени ответа по эндпоинтам",
       "fieldConfig": {
         "defaults": {
           "color": {
             "mode": "thresholds"
-          },
-          "custom": {
-            "displayMode": "lcd",
-            "orientation": "horizontal"
           },
           "mappings": [
             {
@@ -81,7 +48,7 @@
             "steps": [
               {
                 "color": "green",
-                "value": null
+                "value": 0
               },
               {
                 "color": "red",
@@ -105,6 +72,7 @@
         "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "horizontal",
+        "percentChangeColorMode": "standard",
         "reduceOptions": {
           "calcs": [
             "last"
@@ -112,23 +80,25 @@
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "10.0.0",
+      "pluginVersion": "12.2.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "ds-prometheus-1"
           },
-          "editorMode": "builder",
-          "expr": "histogram_quantile(0.95, sum by (le, method, service) (rate(pr_service_rest_request_duration_seconds_bucket[5m])))",
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.999,\n  sum by (le, method, service) (\n    rate(pr_service_rest_request_duration_seconds_bucket{method=~\"$rest_method\"}[5m])\n  )\n)\n",
           "legendFormat": "{{method}} {{service}} - p95",
           "range": true,
           "refId": "A"
         }
       ],
-      "title": "SLI: Latency (95-й перцентиль < 300 мс)",
+      "title": "SLI: Latency (999-й перцентиль < 300 мс)",
       "type": "stat"
     },
     {
@@ -141,10 +111,6 @@
         "defaults": {
           "color": {
             "mode": "thresholds"
-          },
-          "custom": {
-            "displayMode": "lcd",
-            "orientation": "horizontal"
           },
           "decimals": 2,
           "mappings": [
@@ -163,11 +129,11 @@
             "steps": [
               {
                 "color": "red",
-                "value": null
+                "value": 0
               },
               {
                 "color": "green",
-                "value": 99.9
+                "value": 0.999
               }
             ]
           },
@@ -187,6 +153,7 @@
         "graphMode": "area",
         "justifyMode": "auto",
         "orientation": "horizontal",
+        "percentChangeColorMode": "standard",
         "reduceOptions": {
           "calcs": [
             "last"
@@ -194,17 +161,19 @@
           "fields": "",
           "values": false
         },
-        "textMode": "auto"
+        "showPercentChange": false,
+        "textMode": "auto",
+        "wideLayout": true
       },
-      "pluginVersion": "10.0.0",
+      "pluginVersion": "12.2.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "ds-prometheus-1"
           },
-          "editorMode": "builder",
-          "expr": "sum(rate(pr_service_rest_requests_total{code=~\"2..\"}[5m])) / sum(rate(pr_service_rest_requests_total[5m]))",
+          "editorMode": "code",
+          "expr": "sum(rate(pr_service_rest_requests_total{code=~\"2..\", method=~\"$rest_method\"}[5m]))\n/\nsum(rate(pr_service_rest_requests_total{method=~\"$rest_method\"}[5m]))\n",
           "hide": false,
           "legendFormat": "success rate",
           "range": true,
@@ -226,9 +195,13 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
+            "barWidthFactor": 0.6,
             "drawStyle": "line",
             "fillOpacity": 10,
             "gradientMode": "none",
@@ -237,6 +210,7 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 5,
@@ -244,6 +218,7 @@
               "type": "linear"
             },
             "showPoints": "auto",
+            "showValues": false,
             "spanNulls": false,
             "stacking": {
               "group": "A",
@@ -259,7 +234,7 @@
             "steps": [
               {
                 "color": "green",
-                "value": null
+                "value": 0
               },
               {
                 "color": "red",
@@ -286,18 +261,20 @@
           "showLegend": true
         },
         "tooltip": {
+          "hideZeros": false,
           "mode": "single",
           "sort": "none"
         }
       },
+      "pluginVersion": "12.2.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "ds-prometheus-1"
           },
-          "editorMode": "builder",
-          "expr": "sum by (method, service) (pr_service_rest_requests_total)",
+          "editorMode": "code",
+          "expr": "sum by (method, service) (pr_service_rest_requests_total{method=~\"$rest_method\"})",
           "legendFormat": "{{method}} {{service}} - total",
           "range": true,
           "refId": "A"
@@ -318,9 +295,13 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
+            "barWidthFactor": 0.6,
             "drawStyle": "line",
             "fillOpacity": 10,
             "gradientMode": "none",
@@ -329,6 +310,7 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 5,
@@ -336,6 +318,7 @@
               "type": "linear"
             },
             "showPoints": "auto",
+            "showValues": false,
             "spanNulls": false,
             "stacking": {
               "group": "A",
@@ -351,7 +334,7 @@
             "steps": [
               {
                 "color": "green",
-                "value": null
+                "value": 0
               },
               {
                 "color": "red",
@@ -378,18 +361,20 @@
           "showLegend": true
         },
         "tooltip": {
+          "hideZeros": false,
           "mode": "single",
           "sort": "none"
         }
       },
+      "pluginVersion": "12.2.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "ds-prometheus-1"
           },
-          "editorMode": "builder",
-          "expr": "sum by (method, service) (rate(pr_service_rest_requests_total[5m]))",
+          "editorMode": "code",
+          "expr": "sum by (method, service) (rate(pr_service_rest_requests_total{method=~\"$rest_method\"}[5m]))",
           "legendFormat": "{{method}} {{service}} - rps",
           "range": true,
           "refId": "A"
@@ -410,9 +395,13 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
+            "barWidthFactor": 0.6,
             "drawStyle": "line",
             "fillOpacity": 10,
             "gradientMode": "none",
@@ -421,6 +410,7 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 5,
@@ -428,6 +418,7 @@
               "type": "linear"
             },
             "showPoints": "auto",
+            "showValues": false,
             "spanNulls": false,
             "stacking": {
               "group": "A",
@@ -443,7 +434,7 @@
             "steps": [
               {
                 "color": "green",
-                "value": null
+                "value": 0
               },
               {
                 "color": "red",
@@ -470,18 +461,20 @@
           "showLegend": true
         },
         "tooltip": {
+          "hideZeros": false,
           "mode": "single",
           "sort": "none"
         }
       },
+      "pluginVersion": "12.2.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "ds-prometheus-1"
           },
-          "editorMode": "builder",
-          "expr": "pr_service_rest_requests_total{code=~\"2..\"}",
+          "editorMode": "code",
+          "expr": "pr_service_rest_requests_total{code=~\"2..\", method=~\"$rest_method\"}",
           "legendFormat": "{{method}} {{service}} - success",
           "range": true,
           "refId": "A"
@@ -502,9 +495,13 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
+            "barWidthFactor": 0.6,
             "drawStyle": "line",
             "fillOpacity": 10,
             "gradientMode": "none",
@@ -513,6 +510,7 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 5,
@@ -520,6 +518,7 @@
               "type": "linear"
             },
             "showPoints": "auto",
+            "showValues": false,
             "spanNulls": false,
             "stacking": {
               "group": "A",
@@ -536,7 +535,7 @@
             "steps": [
               {
                 "color": "green",
-                "value": null
+                "value": 0
               },
               {
                 "color": "red",
@@ -563,18 +562,20 @@
           "showLegend": true
         },
         "tooltip": {
+          "hideZeros": false,
           "mode": "single",
           "sort": "none"
         }
       },
+      "pluginVersion": "12.2.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "ds-prometheus-1"
           },
-          "editorMode": "builder",
-          "expr": "histogram_quantile(0.95, sum by (le, method, service) (rate(pr_service_rest_request_duration_seconds_bucket[5m])))",
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.95, sum by (le, method, service) (rate(pr_service_rest_request_duration_seconds_bucket{method=~\"$rest_method\"}[5m])))",
           "legendFormat": "{{method}} {{service}} - p95",
           "range": true,
           "refId": "A"
@@ -584,8 +585,8 @@
             "type": "prometheus",
             "uid": "ds-prometheus-1"
           },
-          "editorMode": "builder",
-          "expr": "histogram_quantile(0.99, sum by (le, method, service) (rate(pr_service_rest_request_duration_seconds_bucket[5m])))",
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.99, sum by (le, method, service) (rate(pr_service_rest_request_duration_seconds_bucket{method=~\"$rest_method\"}[5m])))",
           "hide": false,
           "legendFormat": "{{method}} {{service}} - p99",
           "range": true,
@@ -607,9 +608,13 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
+            "barWidthFactor": 0.6,
             "drawStyle": "line",
             "fillOpacity": 10,
             "gradientMode": "none",
@@ -618,6 +623,7 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 5,
@@ -625,6 +631,7 @@
               "type": "linear"
             },
             "showPoints": "auto",
+            "showValues": false,
             "spanNulls": false,
             "stacking": {
               "group": "A",
@@ -640,7 +647,7 @@
             "steps": [
               {
                 "color": "green",
-                "value": null
+                "value": 0
               },
               {
                 "color": "red",
@@ -667,10 +674,12 @@
           "showLegend": true
         },
         "tooltip": {
+          "hideZeros": false,
           "mode": "single",
           "sort": "none"
         }
       },
+      "pluginVersion": "12.2.1",
       "targets": [
         {
           "datasource": {
@@ -699,9 +708,13 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
+            "barWidthFactor": 0.6,
             "drawStyle": "line",
             "fillOpacity": 10,
             "gradientMode": "none",
@@ -710,6 +723,7 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 5,
@@ -717,6 +731,7 @@
               "type": "linear"
             },
             "showPoints": "auto",
+            "showValues": false,
             "spanNulls": false,
             "stacking": {
               "group": "A",
@@ -732,7 +747,7 @@
             "steps": [
               {
                 "color": "green",
-                "value": null
+                "value": 0
               },
               {
                 "color": "red",
@@ -759,10 +774,12 @@
           "showLegend": true
         },
         "tooltip": {
+          "hideZeros": false,
           "mode": "single",
           "sort": "none"
         }
       },
+      "pluginVersion": "12.2.1",
       "targets": [
         {
           "datasource": {
@@ -784,190 +801,6 @@
         "type": "prometheus",
         "uid": "ds-prometheus-1"
       },
-      "description": "Количество записей в таблицах базы данных",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "short"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 8,
-        "x": 16,
-        "y": 24
-      },
-      "id": 7,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "ds-prometheus-1"
-          },
-          "editorMode": "builder",
-          "expr": "pr_service_db_table_num_rows",
-          "legendFormat": "{{table}}",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Postgres: Количество записей по таблицам",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "ds-prometheus-1"
-      },
-      "description": "Скорость вставки записей в таблицы (записей/секунду)",
-      "fieldConfig": {
-        "defaults": {
-          "color": {
-            "mode": "palette-classic"
-          },
-          "custom": {
-            "axisLabel": "",
-            "axisPlacement": "auto",
-            "barAlignment": 0,
-            "drawStyle": "line",
-            "fillOpacity": 10,
-            "gradientMode": "none",
-            "hideFrom": {
-              "legend": false,
-              "tooltip": false,
-              "viz": false
-            },
-            "lineInterpolation": "linear",
-            "lineWidth": 1,
-            "pointSize": 5,
-            "scaleDistribution": {
-              "type": "linear"
-            },
-            "showPoints": "auto",
-            "spanNulls": false,
-            "stacking": {
-              "group": "A",
-              "mode": "none"
-            },
-            "thresholdsStyle": {
-              "mode": "off"
-            }
-          },
-          "mappings": [],
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              {
-                "color": "green",
-                "value": null
-              },
-              {
-                "color": "red",
-                "value": 80
-              }
-            ]
-          },
-          "unit": "ops"
-        },
-        "overrides": []
-      },
-      "gridPos": {
-        "h": 8,
-        "w": 12,
-        "x": 0,
-        "y": 32
-      },
-      "id": 8,
-      "options": {
-        "legend": {
-          "calcs": [],
-          "displayMode": "list",
-          "placement": "bottom",
-          "showLegend": true
-        },
-        "tooltip": {
-          "mode": "single",
-          "sort": "none"
-        }
-      },
-      "targets": [
-        {
-          "datasource": {
-            "type": "prometheus",
-            "uid": "ds-prometheus-1"
-          },
-          "editorMode": "builder",
-          "expr": "sum by (table) (rate(pr_service_db_table_insert_total[5m]))",
-          "legendFormat": "{{table}}",
-          "range": true,
-          "refId": "A"
-        }
-      ],
-      "title": "Postgres: Rate вставки записей по таблицам",
-      "type": "timeseries"
-    },
-    {
-      "datasource": {
-        "type": "prometheus",
-        "uid": "ds-prometheus-1"
-      },
       "description": "Latency операций с базой данных (95-й перцентиль)",
       "fieldConfig": {
         "defaults": {
@@ -975,9 +808,13 @@
             "mode": "palette-classic"
           },
           "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
             "axisLabel": "",
             "axisPlacement": "auto",
             "barAlignment": 0,
+            "barWidthFactor": 0.6,
             "drawStyle": "line",
             "fillOpacity": 10,
             "gradientMode": "none",
@@ -986,6 +823,7 @@
               "tooltip": false,
               "viz": false
             },
+            "insertNulls": false,
             "lineInterpolation": "linear",
             "lineWidth": 1,
             "pointSize": 5,
@@ -993,6 +831,7 @@
               "type": "linear"
             },
             "showPoints": "auto",
+            "showValues": false,
             "spanNulls": false,
             "stacking": {
               "group": "A",
@@ -1009,7 +848,7 @@
             "steps": [
               {
                 "color": "green",
-                "value": null
+                "value": 0
               },
               {
                 "color": "red",
@@ -1024,7 +863,7 @@
       "gridPos": {
         "h": 8,
         "w": 12,
-        "x": 12,
+        "x": 0,
         "y": 32
       },
       "id": 9,
@@ -1036,18 +875,20 @@
           "showLegend": true
         },
         "tooltip": {
+          "hideZeros": false,
           "mode": "single",
           "sort": "none"
         }
       },
+      "pluginVersion": "12.2.1",
       "targets": [
         {
           "datasource": {
             "type": "prometheus",
             "uid": "ds-prometheus-1"
           },
-          "editorMode": "builder",
-          "expr": "histogram_quantile(0.95, sum by (le, operation) (rate(db_query_latency_seconds_bucket[5m])))",
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.95, sum by (le, operation) (rate(pr_service_db_query_latency_seconds_bucket{operation=\"$db_operation\"}[5m])))",
           "legendFormat": "{{operation}} - p95",
           "range": true,
           "refId": "A"
@@ -1057,16 +898,14 @@
       "type": "timeseries"
     }
   ],
+  "preload": false,
   "refresh": "5s",
-  "revision": 1,
-  "schemaVersion": 38,
-  "style": "dark",
+  "schemaVersion": 42,
   "tags": [],
   "templating": {
     "list": [
       {
         "current": {
-          "selected": false,
           "text": "All",
           "value": "$__all"
         },
@@ -1075,7 +914,6 @@
           "uid": "ds-prometheus-1"
         },
         "definition": "label_values(pr_service_rest_requests_total, method)",
-        "hide": 0,
         "includeAll": true,
         "multi": true,
         "name": "rest_method",
@@ -1086,13 +924,10 @@
         },
         "refresh": 1,
         "regex": "",
-        "skipUrlSync": false,
-        "sort": 0,
         "type": "query"
       },
       {
         "current": {
-          "selected": false,
           "text": "All",
           "value": "$__all"
         },
@@ -1101,7 +936,6 @@
           "uid": "ds-prometheus-1"
         },
         "definition": "label_values(pr_service_rest_requests_total, service)",
-        "hide": 0,
         "includeAll": true,
         "multi": true,
         "name": "rest_service",
@@ -1112,13 +946,10 @@
         },
         "refresh": 1,
         "regex": "",
-        "skipUrlSync": false,
-        "sort": 0,
         "type": "query"
       },
       {
         "current": {
-          "selected": false,
           "text": "All",
           "value": "$__all"
         },
@@ -1127,7 +958,6 @@
           "uid": "ds-prometheus-1"
         },
         "definition": "label_values(pr_service_db_table_num_rows, table)",
-        "hide": 0,
         "includeAll": true,
         "multi": true,
         "name": "db_table",
@@ -1138,13 +968,10 @@
         },
         "refresh": 1,
         "regex": "",
-        "skipUrlSync": false,
-        "sort": 0,
         "type": "query"
       },
       {
         "current": {
-          "selected": false,
           "text": "All",
           "value": "$__all"
         },
@@ -1152,20 +979,17 @@
           "type": "prometheus",
           "uid": "ds-prometheus-1"
         },
-        "definition": "label_values(db_query_latency_seconds_bucket, operation)",
-        "hide": 0,
+        "definition": "label_values(pr_service_db_query_latency_seconds_bucket, operation)",
         "includeAll": true,
         "multi": true,
         "name": "db_operation",
         "options": [],
         "query": {
-          "query": "label_values(db_query_latency_seconds_bucket, operation)",
+          "query": "label_values(pr_service_db_query_latency_seconds_bucket, operation)",
           "refId": "StandardVariableQuery"
         },
         "refresh": 1,
         "regex": "",
-        "skipUrlSync": false,
-        "sort": 0,
         "type": "query"
       }
     ]
@@ -1177,6 +1001,6 @@
   "timepicker": {},
   "timezone": "",
   "title": "PR Service Monitoring Dashboard",
-  "version": 1,
-  "weekStart": ""
+  "uid": "6da5e242-c527-42a4-902e-903ab6846ab4",
+  "version": 3
 }

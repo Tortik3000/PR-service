@@ -3,6 +3,7 @@ package pr_service
 import (
 	"context"
 
+	sq "github.com/Masterminds/squirrel"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"go.uber.org/zap"
@@ -11,8 +12,9 @@ import (
 const uniqueKeyViolationCode = "23505"
 
 type postgresRepo struct {
-	db     *pgxpool.Pool
-	logger *zap.Logger
+	db           *pgxpool.Pool
+	logger       *zap.Logger
+	queryBuilder sq.StatementBuilderType
 }
 
 func NewPostgresRepo(
@@ -20,8 +22,9 @@ func NewPostgresRepo(
 	db *pgxpool.Pool,
 ) *postgresRepo {
 	return &postgresRepo{
-		db:     db,
-		logger: logger,
+		db:           db,
+		logger:       logger,
+		queryBuilder: sq.StatementBuilder.PlaceholderFormat(sq.Dollar),
 	}
 }
 

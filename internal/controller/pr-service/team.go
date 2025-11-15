@@ -5,8 +5,9 @@ import (
 	"errors"
 
 	generated "github.com/Tortik3000/PR-service/generated/api/pr-service"
+	"github.com/Tortik3000/PR-service/internal/controller/pr-service/dto"
+	"github.com/Tortik3000/PR-service/internal/models"
 	modelsErr "github.com/Tortik3000/PR-service/internal/models/errors"
-	models "github.com/Tortik3000/PR-service/internal/models/team"
 	"go.uber.org/zap"
 )
 
@@ -16,9 +17,9 @@ func (p *prService) PostTeamAdd(
 ) (generated.PostTeamAddResponseObject, error) {
 	body := request.Body
 
-	team := &models.Team{
-		TeamName: body.TeamName,
-		Members:  models.FromAPIMembers(body.Members),
+	team := models.Team{
+		Name:    body.TeamName,
+		Members: dto.FromAPIMembers(body.Members),
 	}
 	err := p.teamUseCase.TeamAdd(ctx, team)
 	p.logger.Error("err", zap.Error(err))
@@ -35,7 +36,7 @@ func (p *prService) PostTeamAdd(
 	}
 
 	return generated.PostTeamAdd201JSONResponse{
-		Team: models.ToAPITeam(team),
+		Team: dto.ToAPITeam(&team),
 	}, nil
 }
 
@@ -58,7 +59,7 @@ func (p *prService) GetTeamGet(
 	}
 
 	return generated.GetTeamGet200JSONResponse{
-		TeamName: team.TeamName,
-		Members:  models.ToAPIMembers(team.Members),
+		TeamName: team.Name,
+		Members:  dto.ToAPIMembers(team.Members),
 	}, nil
 }

@@ -5,8 +5,8 @@ import (
 	"errors"
 
 	generated "github.com/Tortik3000/PR-service/generated/api/pr-service"
+	"github.com/Tortik3000/PR-service/internal/controller/pr-service/dto"
 	modelsErr "github.com/Tortik3000/PR-service/internal/models/errors"
-	models "github.com/Tortik3000/PR-service/internal/models/pull_request"
 )
 
 func (p *prService) PostPullRequestCreate(
@@ -38,7 +38,7 @@ func (p *prService) PostPullRequestCreate(
 		}
 	}
 
-	apiPR := models.ToAPIPullRequest(pr)
+	apiPR := dto.ToAPIPullRequest(pr)
 	return generated.PostPullRequestCreate201JSONResponse{
 		Pr: apiPR,
 	}, nil
@@ -63,7 +63,7 @@ func (p *prService) PostPullRequestMerge(
 		}
 	}
 
-	apiPR := models.ToAPIPullRequest(pr)
+	apiPR := dto.ToAPIPullRequest(pr)
 	return generated.PostPullRequestMerge200JSONResponse{
 		Pr: apiPR,
 	}, nil
@@ -105,7 +105,7 @@ func (p *prService) PostPullRequestReassign(
 		}
 	}
 
-	apiPR := models.ToAPIPullRequest(pr)
+	apiPR := dto.ToAPIPullRequest(pr)
 	return generated.PostPullRequestReassign200JSONResponse{
 		Pr:         *apiPR,
 		ReplacedBy: replacedBy,

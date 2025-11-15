@@ -5,9 +5,8 @@ import (
 	"errors"
 
 	generated "github.com/Tortik3000/PR-service/generated/api/pr-service"
+	"github.com/Tortik3000/PR-service/internal/controller/pr-service/dto"
 	modelsErr "github.com/Tortik3000/PR-service/internal/models/errors"
-	prModels "github.com/Tortik3000/PR-service/internal/models/pull_request"
-	userModels "github.com/Tortik3000/PR-service/internal/models/user"
 )
 
 func (p *prService) GetUsersGetReview(
@@ -21,7 +20,7 @@ func (p *prService) GetUsersGetReview(
 
 	return generated.GetUsersGetReview200JSONResponse{
 		UserId:       request.Params.UserId,
-		PullRequests: prModels.ToAPIShortSlice(prs),
+		PullRequests: dto.ToAPIShortSlice(prs),
 	}, nil
 }
 
@@ -46,6 +45,6 @@ func (p *prService) PostUsersSetIsActive(
 	}
 
 	return generated.PostUsersSetIsActive200JSONResponse{
-		User: userModels.ToAPIUser(user),
+		User: dto.ToAPIUser(user),
 	}, nil
 }
