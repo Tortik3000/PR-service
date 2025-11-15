@@ -11,17 +11,18 @@ import (
 
 	"github.com/Tortik3000/PR-service/db"
 	"github.com/getkin/kin-openapi/openapi3"
-	"github.com/getkin/kin-openapi/openapi3filter"
-	"github.com/getkin/kin-openapi/routers"
 	"github.com/getkin/kin-openapi/routers/gorillamux"
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"go.uber.org/zap"
 
 	"github.com/Tortik3000/PR-service/config"
 	api "github.com/Tortik3000/PR-service/generated/api/pr-service"
 	controller "github.com/Tortik3000/PR-service/internal/controller/pr-service"
-	repositury "github.com/Tortik3000/PR-service/internal/repository/pr-service"
+	"github.com/Tortik3000/PR-service/internal/metrics"
+	"github.com/Tortik3000/PR-service/internal/middleware"
+	repository "github.com/Tortik3000/PR-service/internal/repository/pr-service"
 	usecase "github.com/Tortik3000/PR-service/internal/usecase/pr-service"
 )
 
@@ -45,31 +46,23 @@ func Run(
 	ctx, cancel := signal.NotifyContext(context.Background(), syscall.SIGINT, syscall.SIGTERM)
 	defer cancel()
 
-	//shutdown := initTracer(logger, cfg.Observability.JaegerURL)
-	//defer func() {
-	//	err := shutdown(ctx)
-	//
-	//	if err != nil {
-	//		logger.Error("can not shutdown jaeger collector", zap.Error(err))
-	//	}
-	//}()
-	//
-	//go runMetricsServer(logger, cfg.Observability.MetricsPort)
-	//runPyroscope(logger, cfg.Observability.PyroscopeUrl)
-
 	dbPool := initDBPool(cfg, logger)
 	defer dbPool.Close()
 
 	db.SetupPostgres(dbPool, logger)
 
-	//db.SetupPostgres(dbPool, logger)
+	repo := repository.NewPostgresRepo(logger, dbPool)
+	metricsRepo := middleware.NewMiddlewareMetricsRepo(repo, metrics.DBQueryLatency)
 
-	repo := repositury.NewPostgresRepo(logger, dbPool)
-	//transactor := repository.NewTransactor(dbPool, logger)
-	useCases := usecase.NewUseCase(logger, repo, repo, repo)
+	transactor := repository.NewTransactor(dbPool, logger)
+	useCases := usecase.NewUseCase(logger, metricsRepo, metricsRepo, metricsRepo, transactor)
 	ctrl := controller.NewPRService(logger, useCases, useCases, useCases)
-	r := chi.NewMux()
 
+	go runMetricsServer(ctx, logger, cfg.Observability.MetricsPort)
+	runPRServer(ctx, logger, ctrl, cfg)
+}
+
+func runPRServer(ctx context.Context, logger *zap.Logger, ctrl api.StrictServerInterface, cfg *config.Config) {
 	loader := openapi3.NewLoader()
 	doc, err := loader.LoadFromFile("api/pr-service/pr-service.yml")
 	if err != nil {
@@ -85,7 +78,10 @@ func Run(
 		return
 	}
 
-	r.Use(OpenAPIValidatorMiddleware(router))
+	r := chi.NewMux()
+
+	r.Use(middleware.MetricsMiddleware("pr-service"))
+	r.Use(middleware.OpenAPIValidatorMiddleware(router))
 
 	serverInterface := api.NewStrictHandler(ctrl, nil)
 	h := api.HandlerFromMux(serverInterface, r)
@@ -100,6 +96,25 @@ func Run(
 	logger.Info("Server started", zap.String("address", srv.Addr))
 	if err := srv.ListenAndServe(); !errors.Is(err, http.ErrServerClosed) {
 		logger.Fatal("Server start error", zap.Error(err))
+	}
+}
+
+func runMetricsServer(ctx context.Context, logger *zap.Logger, port string) {
+	r := chi.NewRouter()
+	r.Get("/metrics", func(w http.ResponseWriter, r *http.Request) {
+		promhttp.Handler().ServeHTTP(w, r)
+	})
+
+	srv := &http.Server{
+		Addr:    ":" + port,
+		Handler: r,
+	}
+
+	go gracefulShutdown(ctx, srv, logger)
+
+	logger.Info("starting metrics server", zap.String("port", port))
+	if err := srv.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+		logger.Fatal("can not start metrics server", zap.Error(err))
 	}
 }
 
@@ -159,29 +174,4 @@ func initDBPool(cfg *config.Config, logger *zap.Logger) *pgxpool.Pool {
 
 	logger.Info("Database connection pool established")
 	return dbPool
-}
-
-func OpenAPIValidatorMiddleware(router routers.Router) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			route, pathParams, err := router.FindRoute(r)
-			if err != nil {
-				http.Error(w, "Route not found", http.StatusNotFound)
-				return
-			}
-
-			requestValidationInput := &openapi3filter.RequestValidationInput{
-				Request:    r,
-				PathParams: pathParams,
-				Route:      route,
-			}
-
-			if err = openapi3filter.ValidateRequest(r.Context(), requestValidationInput); err != nil {
-				http.Error(w, "Invalid request: "+err.Error(), http.StatusBadRequest)
-				return
-			}
-
-			next.ServeHTTP(w, r)
-		})
-	}
 }

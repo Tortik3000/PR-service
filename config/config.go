@@ -14,6 +14,7 @@ type (
 	Config struct {
 		REST
 		PG
+		Observability
 	}
 
 	REST struct {
@@ -28,6 +29,10 @@ type (
 		DB       string `setEnv:"POSTGRES_DB"`
 		User     string `setEnv:"POSTGRES_USER"`
 		Password string `setEnv:"POSTGRES_PASSWORD"`
+	}
+
+	Observability struct {
+		MetricsPort string `env:"METRICS_PORT"`
 	}
 )
 
@@ -49,6 +54,7 @@ func New() (*Config, error) {
 		"POSTGRES_DB":       &cfg.PG.DB,
 		"POSTGRES_USER":     &cfg.PG.User,
 		"POSTGRES_PASSWORD": &cfg.PG.Password,
+		"METRICS_PORT":      &cfg.Observability.MetricsPort,
 	}
 
 	for name, ptr := range envVars {

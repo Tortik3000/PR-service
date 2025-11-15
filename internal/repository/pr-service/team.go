@@ -2,7 +2,6 @@ package pr_service
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 
 	sq "github.com/Masterminds/squirrel"
@@ -21,18 +20,18 @@ func (p *postgresRepo) TeamAdd(
 	}
 	defer tx.Rollback(ctx)
 
-	insertIntoTeam := sq.Insert("team").
+	createTeam := sq.Insert("team").
 		Columns("name").
 		Values(team.TeamName).
 		Suffix("RETURNING id")
 
-	insertIntoTeamStr, args, err := insertIntoTeam.PlaceholderFormat(sq.Dollar).ToSql()
+	createTeamStr, args, err := createTeam.PlaceholderFormat(sq.Dollar).ToSql()
 	if err != nil {
 		return err
 	}
 
 	var teamID int
-	err = tx.QueryRow(ctx, insertIntoTeamStr, args...).Scan(&teamID)
+	err = tx.QueryRow(ctx, createTeamStr, args...).Scan(&teamID)
 	if err != nil {
 		var pgErr *pgconn.PgError
 		if errors.As(err, &pgErr) && pgErr.Code == uniqueKeyViolationCode {
@@ -41,10 +40,10 @@ func (p *postgresRepo) TeamAdd(
 		return err
 	}
 
-	insertIntoUser := sq.Insert("users").
+	createUsers := sq.Insert("users").
 		Columns("id", "name", "is_active", "team_id")
 	for _, member := range team.Members {
-		insertIntoUser = insertIntoUser.
+		createUsers = createUsers.
 			Values(
 				member.UserID,
 				member.Username,
@@ -53,19 +52,19 @@ func (p *postgresRepo) TeamAdd(
 			)
 	}
 
-	insertIntoUser = insertIntoUser.Suffix(`
+	createUsers = createUsers.Suffix(`
 	ON CONFLICT (id) DO UPDATE
 	SET name = EXCLUDED.name,
 	    is_active = EXCLUDED.is_active,
 	    team_id = EXCLUDED.team_id
 	`).PlaceholderFormat(sq.Dollar)
 
-	insertIntoUserStr, args, err := insertIntoUser.ToSql()
+	createUsersStr, args, err := createUsers.ToSql()
 	if err != nil {
 		return err
 	}
 
-	_, err = tx.Exec(ctx, insertIntoUserStr, args...)
+	_, err = tx.Exec(ctx, createUsersStr, args...)
 	if err != nil {
 		return err
 	}
@@ -77,44 +76,39 @@ func (p *postgresRepo) TeamAdd(
 }
 
 func (p *postgresRepo) TeamGet(ctx context.Context, teamName string) (*team.DBTeam, error) {
-	getTeamByID := sq.Select("id").
-		From("team").
-		Where(sq.Eq{"name": teamName}).PlaceholderFormat(sq.Dollar)
+	query := sq.Select(
+		"t.id as team_id",
+		"t.name as team_name",
+		"u.id as user_id",
+		"u.name as username",
+		"u.is_active",
+	).
+		From("team t").
+		Join("users u ON t.id = u.team_id").
+		Where(sq.Eq{"t.name": teamName}).
+		PlaceholderFormat(sq.Dollar)
 
-	getTeamByIDStr, args, err := getTeamByID.ToSql()
+	queryStr, args, err := query.ToSql()
 	if err != nil {
 		return nil, err
 	}
 
-	var teamID int
-	err = p.db.QueryRow(ctx, getTeamByIDStr, args...).Scan(&teamID)
-	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return nil, modelsErr.ErrTeamNotFound
-		}
-		return nil, err
-	}
-
-	getUsers := sq.Select("id", "name", "is_active").
-		From("users").
-		Where(sq.Eq{"team_id": teamID}).PlaceholderFormat(sq.Dollar)
-
-	getUsersStr, args, err := getUsers.ToSql()
-	if err != nil {
-		return nil, err
-	}
-
-	rows, err := p.db.Query(ctx, getUsersStr, args...)
+	rows, err := p.db.Query(ctx, queryStr, args...)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
 	var dbTeam team.DBTeam
-	dbTeam.TeamName = teamName
+	dbTeam.Members = make([]team.DBTeamMember, 0)
+
 	for rows.Next() {
 		var member team.DBTeamMember
+		var teamID int
+
 		err = rows.Scan(
+			&teamID,
+			&dbTeam.TeamName,
 			&member.UserID,
 			&member.Username,
 			&member.IsActive,

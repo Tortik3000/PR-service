@@ -3,6 +3,7 @@ package pr_service
 import (
 	"context"
 
+	modelsErr "github.com/Tortik3000/PR-service/internal/models/errors"
 	models "github.com/Tortik3000/PR-service/internal/models/team"
 )
 
@@ -25,6 +26,10 @@ func (u *useCase) TeamGet(
 	dbTeam, err := u.teamRepository.TeamGet(ctx, teamName)
 	if err != nil {
 		return nil, err
+	}
+
+	if len(dbTeam.Members) == 0 {
+		return nil, modelsErr.ErrTeamNotFound
 	}
 
 	return models.FromDB(dbTeam), nil

@@ -7,6 +7,7 @@ import (
 	generated "github.com/Tortik3000/PR-service/generated/api/pr-service"
 	modelsErr "github.com/Tortik3000/PR-service/internal/models/errors"
 	models "github.com/Tortik3000/PR-service/internal/models/team"
+	"go.uber.org/zap"
 )
 
 func (p *prService) PostTeamAdd(
@@ -20,6 +21,7 @@ func (p *prService) PostTeamAdd(
 		Members:  models.FromAPIMembers(body.Members),
 	}
 	err := p.teamUseCase.TeamAdd(ctx, team)
+	p.logger.Error("err", zap.Error(err))
 	if err != nil {
 		switch {
 		case errors.Is(err, modelsErr.ErrTeamExist):

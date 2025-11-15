@@ -10,8 +10,7 @@ var (
 	ErrTeamNotFound = errors.New("team not found")
 	ErrPRNotFound   = errors.New("pull request not found")
 
-	ErrPRMerged     = errors.New("pr already merged")
-	ErrNotActive    = errors.New("not active candidate")
-	ErrNotAssigned  = errors.New("the user was not assigned as a reviewer for this PR")
-	ErrNotCandidate = errors.New("no active replacement candidate in team")
+	ErrPRMerged           = errors.New("pr already merged")
+	ErrNotAssigned        = errors.New("the user was not assigned as a reviewer for this PR")
+	ErrNotActiveCandidate = errors.New("no active replacement candidate in team")
 )

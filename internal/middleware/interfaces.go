@@ -1,4 +1,4 @@
-package pr_service
+package middleware
 
 import (
 	"context"
@@ -6,21 +6,14 @@ import (
 	pr "github.com/Tortik3000/PR-service/internal/models/pull_request"
 	"github.com/Tortik3000/PR-service/internal/models/team"
 	"github.com/Tortik3000/PR-service/internal/models/user"
-	"go.uber.org/zap"
 )
 
 type (
-	userRepository interface {
+	metricsRepo interface {
 		GetReview(ctx context.Context, userID string) ([]pr.DBPullRequestShort, error)
 		SetIsActive(ctx context.Context, userID string, isActive bool) (*user.DBUser, error)
-	}
-
-	teamRepository interface {
 		TeamAdd(ctx context.Context, team *team.DBTeam) error
 		TeamGet(ctx context.Context, teamName string) (*team.DBTeam, error)
-	}
-
-	pullRequestsRepository interface {
 		PullRequestCreate(ctx context.Context, authorID, prID, prName string, teammates []string) (*pr.DBPullRequest, error)
 		PullRequestMerge(ctx context.Context, prID string) (*pr.DBPullRequest, error)
 		PullRequestReassign(ctx context.Context, prID, oldReviewerID, newReviewerID string) error
@@ -28,32 +21,4 @@ type (
 		GetTeamIDByUserID(ctx context.Context, userID string) (teamID string, err error)
 		GetPullRequest(ctx context.Context, prID string) (*pr.DBPullRequest, error)
 	}
-
-	transactor interface {
-		WithTx(ctx context.Context, function func(ctx context.Context) error) error
-	}
 )
-
-type useCase struct {
-	logger                 *zap.Logger
-	pullRequestsRepository pullRequestsRepository
-	teamRepository         teamRepository
-	userRepository         userRepository
-	transactor             transactor
-}
-
-func NewUseCase(
-	logger *zap.Logger,
-	pullRequestsRepository pullRequestsRepository,
-	teamRepository teamRepository,
-	userRepository userRepository,
-	transactor transactor,
-) *useCase {
-	return &useCase{
-		logger:                 logger,
-		pullRequestsRepository: pullRequestsRepository,
-		teamRepository:         teamRepository,
-		userRepository:         userRepository,
-		transactor:             transactor,
-	}
-}

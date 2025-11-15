@@ -15,9 +15,11 @@ func (p *postgresRepo) GetReview(
 	ctx context.Context,
 	userID string,
 ) ([]pr.DBPullRequestShort, error) {
-	getPRs := sq.Select("pr_id").
-		From("assigned_reviewer").
-		Where(sq.Eq{"user_id": userID}).PlaceholderFormat(sq.Dollar)
+	getPRs := sq.Select("pr.id", "pr.name", "pr.author_id", "pr.status").
+		From("assigned_reviewer ar").
+		Join("pull_request pr ON ar.pr_id = pr.id").
+		Where(sq.Eq{"ar.user_id": userID}).
+		PlaceholderFormat(sq.Dollar)
 
 	getPRsStr, args, err := getPRs.ToSql()
 	if err != nil {
@@ -30,30 +32,6 @@ func (p *postgresRepo) GetReview(
 	}
 	defer rows.Close()
 
-	var ids []string
-	for rows.Next() {
-		var prID string
-		err = rows.Scan(&prID)
-		if err != nil {
-			return nil, err
-		}
-		ids = append(ids, prID)
-	}
-
-	getPRs = sq.Select("id", "name", "author_id", "status").
-		From("pull_request").
-		Where(sq.Eq{"id": ids}).PlaceholderFormat(sq.Dollar)
-
-	getPRsStr, args, err = getPRs.ToSql()
-	if err != nil {
-		return nil, err
-	}
-
-	rows, err = p.db.Query(ctx, getPRsStr, args...)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
 	var prs []pr.DBPullRequestShort
 	for rows.Next() {
 		var dbPR pr.DBPullRequestShort
@@ -76,13 +54,13 @@ func (p *postgresRepo) SetIsActive(
 	userId string,
 	isActive bool,
 ) (*user.DBUser, error) {
-	updateActive := sq.Update("users").
+	setIsActive := sq.Update("users").
 		Set("is_active", isActive).
 		Where(sq.Eq{"id": userId}).
 		Suffix("RETURNING name, team_id").
 		PlaceholderFormat(sq.Dollar)
 
-	updateActiveStr, args, err := updateActive.ToSql()
+	setIsActiveStr, args, err := setIsActive.ToSql()
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +68,7 @@ func (p *postgresRepo) SetIsActive(
 	var dbUser user.DBUser
 	dbUser.ID = userId
 	dbUser.IsActive = isActive
-	err = p.db.QueryRow(ctx, updateActiveStr, args...).Scan(
+	err = p.db.QueryRow(ctx, setIsActiveStr, args...).Scan(
 		&dbUser.Name,
 		&dbUser.TeamName,
 	)

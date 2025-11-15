@@ -1,36 +1,30 @@
 version: "3.9"
 
 services:
-#  pr-service:
-#    build:
-#      context: .
-#      dockerfile: Dockerfile
-#    depends_on:
-#      postgres:
-#        condition: service_healthy
-#      pyroscope:
-#        condition: service_started
-#    environment:
-#      REST_PORT: "${REST_PORT}"
-#      POSTGRES_DB: "${POSTGRES_DB}"
-#      POSTGRES_USER: "${POSTGRES_USER}"
-#      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
-#      POSTGRES_PORT: "${POSTGRES_PORT}"
-#      POSTGRES_HOST: "${POSTGRES_HOST}"
-#
-##      METRICS_PORT: "${METRICS_PORT}"
-##      JAEGER_URL: "${JAEGER_URL}"
-##      JAEGER_TRACE_PORT: "${JAEGER_TRACE_PORT}"
-##      JAEGER_WEB_PORT: "${JAEGER_WEB_PORT}"
-##      PYROSCOPE_URL: "${PYROSCOPE_URL}"
-#
-#    volumes:
-#      - library-logs:/app/logs
-#    ports:
-#      - "${REST_PORT}:${REST_PORT}"
-##      - "${METRICS_PORT}:${METRICS_PORT}"
-#    networks:
-#      - internal
+  pr-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      REST_PORT: "${REST_PORT}"
+      REST_HOST: "${REST_HOST}"
+      POSTGRES_DB: "${POSTGRES_DB}"
+      POSTGRES_USER: "${POSTGRES_USER}"
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      POSTGRES_PORT: "${POSTGRES_PORT}"
+      POSTGRES_HOST: "${POSTGRES_HOST}"
+      METRICS_PORT: "${METRICS_PORT}"
+
+    volumes:
+      - pr-service-logs:/app/logs
+    ports:
+      - "${REST_PORT}:${REST_PORT}"
+      - "${METRICS_PORT}:${METRICS_PORT}"
+    networks:
+      - internal
 
   postgres:
     container_name: 'postgres'
@@ -57,93 +51,62 @@ services:
     networks:
       - internal
 
-#  jaeger:
-#    image: jaegertracing/all-in-one:1.53
-#    ports:
-#      - "${JAEGER_WEB_PORT}:${JAEGER_WEB_PORT}"
-#      - "${JAEGER_TRACE_PORT}:${JAEGER_TRACE_PORT}"
-#    networks:
-#      - internal
-
-#  prometheus:
-#    image: prom/prometheus
-#    volumes:
-#      - ./infra/prometheus.yml:/etc/prometheus/prometheus.yml
-#    ports:
-#      - "${PROMETHEUS_PORT}:${PROMETHEUS_PORT}"
-#    networks:
-#      - internal
-#    healthcheck:
-#      test: [ "CMD", "wget", "--spider", "http://localhost:9090/-/healthy" ]
-#      interval: 10s
-#      timeout: 5s
-#      retries: 10
-#      start_period: 30s
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./infra/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "${PROMETHEUS_PORT}:${PROMETHEUS_PORT}"
+    networks:
+      - internal
+    healthcheck:
+      test: [ "CMD", "wget", "--spider", "http://localhost:${PROMETHEUS_PORT}/-/healthy" ]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
 
 
-#  grafana:
-#    image: grafana/grafana
-#    ports:
-#      - "${GRAFANA_PORT}:${GRAFANA_PORT}"
-#    volumes:
-#      - grafana-storage:/var/lib/grafana
-#      - ./infra/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
-#      - ./infra/grafana/dashboards/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml
-#      - ./infra/grafana/dashboards/:/etc/grafana/provisioning/dashboards/
-#    networks:
-#      - internal
-#    depends_on:
-#      prometheus:
-#        condition: service_healthy
-#    environment:
-#      GF_SECURITY_ADMIN_PASSWORD: admin
-#      DS_PROMETHEUS: "${DS_PROMETHEUS}"
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "${GRAFANA_PORT}:${GRAFANA_PORT}"
+    volumes:
+      - grafana-storage:/var/lib/grafana
+      - ./infra/grafana/datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml
+      - ./infra/grafana/dashboards/dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml
+      - ./infra/grafana/dashboards/:/etc/grafana/provisioning/dashboards/
+    networks:
+      - internal
+    depends_on:
+      prometheus:
+        condition: service_healthy
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      DS_PROMETHEUS: "${DS_PROMETHEUS}"
 
-#  loki:
-#    image: grafana/loki:2.9.2
-#    ports:
-#      - "${LOKI_PORT}:${LOKI_PORT}"
-#    command: -config.file=/etc/loki/local-config.yaml
-#    networks:
-#      - internal
-#
-#  promtail:
-#    image: grafana/promtail:2.9.2
-#    volumes:
-#      - library-logs:/var/log
-#      - ./infra/promtail-config.yaml:/etc/promtail/config.yml
-#    command: -config.file=/etc/promtail/config.yml
-#    networks:
-#      - internal
-#
-#  pyroscope:
-#    image: grafana/pyroscope:latest
-#    ports:
-#      - "${PYROSCOPE_PORT}:${PYROSCOPE_PORT}"
-#    networks:
-#      - internal
-#
-#  dummy-author:
-#    image: hashicorp/http-echo:0.2.3
-#    command: [ "-text=OK", "-listen=:8081" ]
-#    ports:
-#      - "8081:8081"
-#    networks:
-#      - internal
-#
-#  dummy-book:
-#    image: hashicorp/http-echo:0.2.3
-#    command: [ "-text=OK", "-listen=:8082" ]
-#    ports:
-#      - "8082:8082"
-#    networks:
-#      - internal
-#
+  loki:
+    image: grafana/loki:2.9.2
+    ports:
+      - "${LOKI_PORT}:${LOKI_PORT}"
+    command: -config.file=/etc/loki/local-config.yaml
+    networks:
+      - internal
+
+  promtail:
+    image: grafana/promtail:2.9.2
+    volumes:
+      - pr-service-logs:/var/log
+      - ./infra/promtail-config.yaml:/etc/promtail/config.yml
+    command: -config.file=/etc/promtail/config.yml
+    networks:
+      - internal
+
 volumes:
   postgres-data:
-#  grafana-storage:
-#  library-logs:
-#
+  grafana-storage:
+  pr-service-logs:
+
 networks:
   internal:
     driver: bridge
