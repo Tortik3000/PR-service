@@ -33,7 +33,7 @@ jobs:
         working-directory: ./
         run: go mod tidy
       - name: Linter
-        uses: golangci/golangci-lint-action@v4
+        uses: golangci/golangci-lint-action@v8
         with:
           version: v1.64.8
       - uses: gwatts/go-coverage-action@v2
