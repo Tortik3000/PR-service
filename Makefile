@@ -19,6 +19,9 @@ generate: bin-deps .generate
 
 .PHONY: test
 test:
+	@echo 'Loading environment variables...'
+	@export $$(cat ./integration/pr-service/.env.test | grep -v '^#' | xargs)
+
 	echo 'Running tests...'
 	${GO_TEST} ${GO_TEST_ARGS}
 
