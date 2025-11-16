@@ -12,7 +12,7 @@
 ## Настройка переменных окружения
 
 
-[.env](../.env.example) файл:
+нужно создать [.env](../.env.example) файл:
 
 ```
 # Порты сервиса
@@ -37,7 +37,7 @@ DS_PROMETHEUS=ds-prometheus-1
 
 ```shell script
 
-make build
+make generate
 docker-compose up -d
   
 ```
@@ -192,10 +192,85 @@ pr-service/
 Для запуска тестов:
 ```shell
 
+docker compose up -d
+
+```
+
+```shell
+
     k6 run k6/reassign_reviewer_load_test.js
     k6 run k6/load_test_without_rw.js
     
 ```
+
+### Результат запуска [reassign_reviewer_load_test.js](../k6/reassign_reviewer_load_test.js)
+    15 комад
+    20 человек в каждой команде
+    каждый является автором одного PR
+
+    Запрсы отправлются батчем из 10 штук
+    после этого обновляется состояние в тесте
+    rps: 100
+
+    
+
+
+  █ TOTAL RESULTS 
+
+    HTTP
+    http_req_duration..............: avg=1.23ms min=355.15µs med=1.21ms max=16.25ms p(90)=1.62ms p(95)=1.78ms
+      { expected_response:true }...: avg=1.23ms min=564.04µs med=1.21ms max=16.25ms p(90)=1.62ms p(95)=1.78ms
+    http_req_failed................: 0.79%  959 out of 120265
+    http_reqs......................: 120265 1000.193118/s
+
+    EXECUTION
+    dropped_iterations.............: 5      0.041583/s
+    iteration_duration.............: avg=2.89ms min=2.18ms   med=2.8ms  max=17.68ms p(90)=3.3ms  p(95)=3.6ms 
+    iterations.....................: 11995  99.75734/s
+    vus............................: 0      min=0             max=0
+    vus_max........................: 1      min=1             max=1
+
+
+Все http_req_failed это 409(reviewer is not assigned to this PR)
+Происходит из-за параллельного изменения несколькими машанами ревьюеров в массиве тестов
+
+### Результат запуска [reassign_reviewer_load_test.js](../k6/load_test_without_rw.js)
+    10 комад
+    10 человек в каждой команде
+    каждый является автором одного PR
+
+    Все операции отправляются параллельно 
+    Каждая операция с 10 виртуальных машин
+    rps с каждой машины: 100
+
+
+  █ TOTAL RESULTS 
+
+    HTTP
+    http_req_duration..............: avg=1.22ms min=266.86µs med=1.02ms max=20.02ms p(90)=2.21ms p(95)=2.52ms
+      { expected_response:true }...: avg=1.22ms min=266.86µs med=1.02ms max=20.02ms p(90)=2.21ms p(95)=2.52ms
+    http_req_failed................: 0.00%  0 out of 82106
+    http_reqs......................: 82106  575.171824/s
+
+    EXECUTION
+    iteration_duration.............: avg=1.17ms min=326.78µs med=1.01ms max=20.62ms p(90)=1.97ms p(95)=2.26ms
+    iterations.....................: 72006  504.418951/s
+    vus............................: 0      min=0          max=0 
+    vus_max........................: 60     min=60         max=60
+
+    NETWORK
+    data_received..................: 115 MB 804 kB/s
+    data_sent......................: 17 MB  117 kB/s
+
+
+### Итог
+Максимальное время ответа: 20ms 
+
+Значит либо все работает хорошо, либо тесты плохие
+
+Также надо было провести параллельный запуск reassignReviewerPR с конфликтующими операциями(setIsActive and mergePr), 
+но тяжело
+
 ---
 
 Допущения:

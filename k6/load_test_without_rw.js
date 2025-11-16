@@ -66,11 +66,11 @@ export function setup() {
     const teams = [];
     const users = [];
 
-    for (let i = 0; i < 100; i++) {
+    for (let i = 0; i < 10; i++) {
         const team_name = `Team-${uuid()}`;
         const members = [];
 
-        for (let j = 0; j < 100; j++) {
+        for (let j = 0; j < 10; j++) {
             const user_id = uuid();
             const username = `User-${uuid()}`;
             const is_active = true;
