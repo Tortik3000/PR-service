@@ -95,7 +95,7 @@ jobs:
           
           docker cp $(pwd) $TEST_CONTAINER:/app
           docker start $TEST_CONTAINER
-          docker exec -w /app $TEST_CONTAINER sh -c "go mod tidy && go test -v -race -timeout 5m -tags='integration_test' ./..."
+          docker exec -w /app $TEST_CONTAINER sh -c "go mod tidy && go test -v -race -timeout 5m -tags='pr_service' ./..."
       - name: Cleanup
         if: always()
         run: |
