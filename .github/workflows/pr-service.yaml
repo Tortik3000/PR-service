@@ -87,7 +87,7 @@ jobs:
           docker create --name $TEST_CONTAINER \
             --network $NETWORK_NAME \
             -e POSTGRES_HOST=postgres \
-            -e POSTGRES_PORT=5432 \
+            -e POSTGRES_PORT=2345 \
             -e POSTGRES_DB=library \
             -e POSTGRES_USER=go_student \
             -e POSTGRES_PASSWORD=1234567 \

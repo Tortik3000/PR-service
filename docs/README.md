@@ -60,7 +60,39 @@ DS_PROMETHEUS=ds-prometheus-1
 | Prometheus | http://localhost:9090 | Метрики                |
 | Grafana    | http://localhost:3000 | Дашборды (admin/admin) |
 
+### Запуск тестов
+
+--- 
+
+Для интеграционных тестов нужно поднять тестовую бд
+```shell
+
+sudo docker compose --env-file integration/pr-service/.env.test -f docker-compose.test.yml up -d
+
+```
+
+### Настройка переменных для подключения к тестовой бд
+
+---
+
+[.env.test](../integration/pr-service/.env.test) файл:
+
+```
+# Порты сервиса
+REST_PORT=8080
+METRICS_PORT=9000
+
+# PostgreSQL
+POSTGRES_HOST=localhost
+POSTGRES_PORT=2345
+POSTGRES_DB=pr-service
+POSTGRES_USER=ed
+POSTGRES_PASSWORD=1234567
+```
+
 ### Makefile
+
+---
 
 Для удобств локальной разработки сделан [`Makefile`](Makefile). Имеются следующие команды:
 
@@ -156,4 +188,4 @@ pr-service/
 Допущения:
 - Использовал поднятие миграций к БД в коде для простоты поднятия сервиса
 - Добавил валидацию в OpenAPI спецификацию, так как эту валидацию, 
-- как правило, нужно делать на уровне хэндлеров, и удобно её получить из спецификации
+как правило, нужно делать на уровне хэндлеров, и удобно её получить из спецификации
