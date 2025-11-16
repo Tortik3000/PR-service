@@ -4,7 +4,7 @@ GOIMPORTS_BIN := $(LOCAL_BIN)/goimports
 GO_TEST=$(LOCAL_BIN)/gotest
 GO_TEST_ARGS=-race -v ./...
 
-all: generate lint test build
+all: generate build lint test
 
 .PHONY: lint
 lint:
@@ -20,10 +20,11 @@ generate: bin-deps .generate
 .PHONY: test
 test:
 	@echo 'Loading environment variables...'
-	@export $$(cat ./integration/pr-service/.env.test | grep -v '^#' | xargs)
+	@echo $$(cat .env.test | grep -v '^#' | xargs)
 
-	echo 'Running tests...'
-	${GO_TEST} ${GO_TEST_ARGS}
+	@echo 'Running tests...'
+	export $$(cat .env.test | grep -v '^#' | xargs) && ${GO_TEST} ${GO_TEST_ARGS}
+
 
 bin-deps: .bin-deps
 .bin-deps: export GOBIN := $(LOCAL_BIN)

@@ -45,7 +45,7 @@ DS_PROMETHEUS=ds-prometheus-1
 
 ```shell script
 
-  docker-compose up -d
+docker-compose up -d
   
 ```
 
@@ -67,7 +67,7 @@ DS_PROMETHEUS=ds-prometheus-1
 Для интеграционных тестов нужно поднять тестовую бд
 ```shell
 
-sudo docker compose --env-file integration/pr-service/.env.test -f docker-compose.test.yml up -d
+docker compose --env-file .env.test -f docker-compose.test.yml up -d
 
 ```
 
@@ -75,7 +75,7 @@ sudo docker compose --env-file integration/pr-service/.env.test -f docker-compos
 
 ---
 
-[.env.test](../integration/pr-service/.env.test) файл:
+[.env.test](../.env.test) файл:
 
 ```
 # Порты сервиса
@@ -96,13 +96,8 @@ POSTGRES_PASSWORD=1234567
 
 Для удобств локальной разработки сделан [`Makefile`](Makefile). Имеются следующие команды:
 
-Установить необходимые зависимости
-```bash
-
-make bin-deps
-
-```
-Запустить полный цикл (линтер, тесты):
+Запустить полный цикл 
+(нужно запустить чтобы сгенерировать файлы, сбилдить проект и скачать все зависимости):
 
 ```bash 
 
@@ -123,6 +118,22 @@ make test
 ```bash
 
 make lint
+
+```
+
+build:
+
+```bash
+
+make build
+
+```
+
+Генерация файлов:
+
+```bash
+
+make generate
 
 ```
 
