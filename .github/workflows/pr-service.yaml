@@ -32,6 +32,20 @@ jobs:
       - name: Dependencies
         working-directory: ./
         run: go mod tidy
+      - uses: gwatts/go-coverage-action@v2
+        id: coverage
+        with:
+          cover-pkg: ./...
+          cover-mode: count
+          ignore-pattern: |
+            .json$
+            _mock\.go$
+            _minimock\.go$
+            generated
+            cmd
+            internal/app
+            db/migrate
+            repository/postgres\.go$
       - name: Generate unique names
         run: |
           UNIQUE_ID=$(echo "${GITHUB_RUN_ID}_$(openssl rand -hex 6)" | sha256sum | cut -c1-12)
@@ -52,7 +66,7 @@ jobs:
             --name $POSTGRES_CONTAINER \
             --network $NETWORK_NAME \
             --network-alias postgres \
-            -e POSTGRES_DB=library \
+            -e POSTGRES_DB=pr-service \
             -e POSTGRES_USER=ed \
             -e POSTGRES_PASSWORD=1234567 \
             postgres:17
