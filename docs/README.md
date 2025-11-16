@@ -1,23 +1,16 @@
-
-
-- прогнать линтеры
-- описать нагрузочное тестирование
-- написать доку
-
 # Документация PR service
 
-### Требования
+**Все команды запускаются из корня репозитория**
 
----
+## Требования
 
 Для работы необходимо установить:
 - [Docker](https://www.docker.com/) (20.10+)
 - [Docker Compose](https://docs.docker.com/compose/) (1.29+)
 - [Make](https://www.gnu.org/software/make/) (4.3+) 
 
-### Настройка переменных окружения
+## Настройка переменных окружения
 
----
 
 [.env](../.env.example) файл:
 
@@ -39,17 +32,17 @@ PROMETHEUS_PORT=9090
 DS_PROMETHEUS=ds-prometheus-1
 ```
 
-### Запуск через Docker Compose
+## Запуск через Docker Compose
 
----
 
 ```shell script
 
+make build
 docker-compose up -d
   
 ```
 
-### Доступные сервисы
+## Доступные сервисы
 
 После успешного запуска доступны следующие интерфейсы:
 
@@ -60,20 +53,8 @@ docker-compose up -d
 | Prometheus | http://localhost:9090 | Метрики                |
 | Grafana    | http://localhost:3000 | Дашборды (admin/admin) |
 
-### Запуск тестов
+## Настройка переменных для подключения к тестовой бд
 
---- 
-
-Для интеграционных тестов нужно поднять тестовую бд
-```shell
-
-docker compose --env-file .env.test -f docker-compose.test.yml up -d
-
-```
-
-### Настройка переменных для подключения к тестовой бд
-
----
 
 [.env.test](../.env.test) файл:
 
@@ -90,7 +71,25 @@ POSTGRES_USER=ed
 POSTGRES_PASSWORD=1234567
 ```
 
-### Makefile
+## Запуск тестов
+
+
+Для интеграционных тестов нужно поднять тестовую бд
+```shell
+
+docker compose --env-file .env.test -f docker-compose.test.yml up -d
+
+```
+
+Запуск тестов:
+```bash
+
+make all
+
+```
+
+
+## Makefile
 
 ---
 
@@ -139,9 +138,10 @@ make generate
 
 При разработке на Windows рекомендуется использовать [WSL](https://learn.microsoft.com/en-us/windows/wsl/install)
 
----
 
 ## Структура проекта
+
+---
 
 ```
 pr-service/
@@ -168,9 +168,10 @@ pr-service/
 └── ...
 ```
 
----
 
 ## Нагрузочное тестирование
+
+---
 
 ### k6
 

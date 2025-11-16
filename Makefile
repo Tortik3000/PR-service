@@ -4,7 +4,7 @@ GOIMPORTS_BIN := $(LOCAL_BIN)/goimports
 GO_TEST=$(LOCAL_BIN)/gotest
 GO_TEST_ARGS=-race -v ./...
 
-all: generate build lint test
+all: generate lint test
 
 .PHONY: lint
 lint:
@@ -15,7 +15,7 @@ lint:
 	--max-issues-per-linter=0 \
 	--max-same-issues=0
 
-generate: bin-deps .generate
+generate: bin-deps .generate build
 
 .PHONY: test
 test:
