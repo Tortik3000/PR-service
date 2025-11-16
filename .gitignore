@@ -2,3 +2,4 @@
 /bin
 .env
 *_mock.go
+actions-runner

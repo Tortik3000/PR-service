@@ -25,7 +25,7 @@ test:
 bin-deps: .bin-deps
 .bin-deps: export GOBIN := $(LOCAL_BIN)
 .bin-deps: .create-bin
-	GOBIN=$(LOCAL_BIN) go install github.com/golangci/golangci-lint/cmd/golangci-lint@1.64.8 && \
+	GOBIN=$(LOCAL_BIN) go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.64.8 && \
 	GOBIN=$(LOCAL_BIN) go install github.com/rakyll/gotest@v0.0.6 && \
 	GOBIN=$(LOCAL_BIN) go install go.uber.org/mock/mockgen@latest && \
 	mv $(LOCAL_BIN)/mockgen $(LOCAL_BIN)/mockgen_uber
