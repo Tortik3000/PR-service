@@ -9,6 +9,8 @@ import (
 	modelsErr "github.com/Tortik3000/PR-service/internal/models/errors"
 )
 
+const countMaxReviewers = uint64(2)
+
 func (u *useCase) PullRequestCreate(
 	ctx context.Context,
 	authorID, prID, prName string,
@@ -22,7 +24,7 @@ func (u *useCase) PullRequestCreate(
 		}
 
 		excludedUsers := []string{authorID}
-		teammates, err := u.teamRepository.GetActiveTeammates(ctx, teamID, excludedUsers, 2)
+		teammates, err := u.teamRepository.GetActiveTeammates(ctx, teamID, excludedUsers, countMaxReviewers)
 		if err != nil {
 			return err
 		}

@@ -1,7 +1,6 @@
 package pr_service
 
 import (
-	"context"
 	"errors"
 	"testing"
 
@@ -103,11 +102,11 @@ func TestPostTeamAdd(t *testing.T) {
 				nil,
 			)
 
-			resp, err := svc.PostTeamAdd(context.Background(),
+			resp, err := svc.PostTeamAdd(t.Context(),
 				api.PostTeamAddRequestObject{Body: tt.body})
 
 			if tt.wantErr == nil {
-				require.Nil(t, err)
+				require.NoError(t, err)
 			} else {
 				require.ErrorIs(t, tt.wantErr, err)
 			}
@@ -194,13 +193,13 @@ func TestGetTeamGet(t *testing.T) {
 				nil,
 			)
 
-			resp, err := svc.GetTeamGet(context.Background(),
+			resp, err := svc.GetTeamGet(t.Context(),
 				api.GetTeamGetRequestObject{
 					Params: tt.params,
 				})
 
 			if tt.wantErr == nil {
-				require.Nil(t, err)
+				require.NoError(t, err)
 			} else {
 				require.ErrorIs(t, tt.wantErr, err)
 			}

@@ -89,7 +89,7 @@ func TestUseCase_PullRequestCreate(t *testing.T) {
 			mockTeamRepo := mocks.NewMockteamRepository(ctrl)
 			mockPRRepo := mocks.NewMockpullRequestsRepository(ctrl)
 
-			ctx := context.Background()
+			ctx := t.Context()
 
 			u := &useCase{
 				transactor:             mockTransactor,
@@ -266,7 +266,7 @@ func TestUseCase_PullRequestReassign(t *testing.T) {
 			mockTeamRepo := mocks.NewMockteamRepository(ctrl)
 			mockPRRepo := mocks.NewMockpullRequestsRepository(ctrl)
 
-			ctx := context.Background()
+			ctx := t.Context()
 
 			u := &useCase{
 				transactor:             mockTransactor,

@@ -62,7 +62,6 @@ func TestUseCase_TeamGet(t *testing.T) {
 	}
 
 	for _, tt := range tests {
-
 		t.Run(tt.name, func(t *testing.T) {
 			t.Parallel()
 
@@ -78,7 +77,7 @@ func TestUseCase_TeamGet(t *testing.T) {
 				TeamGet(gomock.Any(), tt.teamName).
 				Return(tt.mockReturn, tt.mockErr)
 
-			team, err := u.TeamGet(nil, tt.teamName)
+			team, err := u.TeamGet(t.Context(), tt.teamName)
 
 			if tt.wantErr != nil {
 				require.ErrorIs(t, err, tt.wantErr)

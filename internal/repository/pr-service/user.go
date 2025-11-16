@@ -66,17 +66,17 @@ func (p *postgresRepo) GetReview(
 
 func (p *postgresRepo) SetIsActive(
 	ctx context.Context,
-	userId string,
+	userID string,
 	isActive bool,
 ) (*models.User, error) {
 	logger := p.logger.With(
-		zap.String("user_id", userId),
+		zap.String("user_id", userID),
 		zap.Bool("is_active", isActive),
 	)
 
 	setIsActive := p.queryBuilder.Update("users").
 		Set("is_active", isActive).
-		Where(sq.Eq{"id": userId}).
+		Where(sq.Eq{"id": userID}).
 		Suffix("RETURNING name, team_id")
 
 	setIsActiveStr, args, err := setIsActive.ToSql()
@@ -91,7 +91,7 @@ func (p *postgresRepo) SetIsActive(
 	)
 
 	var user models.User
-	user.ID = userId
+	user.ID = userID
 	user.IsActive = isActive
 
 	err = p.db.QueryRow(ctx, setIsActiveStr, args...).Scan(

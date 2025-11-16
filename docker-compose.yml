@@ -10,7 +10,6 @@ services:
         condition: service_healthy
     environment:
       REST_PORT: "${REST_PORT}"
-      REST_HOST: "${REST_HOST}"
       POSTGRES_DB: "${POSTGRES_DB}"
       POSTGRES_USER: "${POSTGRES_USER}"
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"

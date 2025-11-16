@@ -1,4 +1,4 @@
-package middleware
+package repo_middleware
 
 import (
 	"context"
@@ -93,8 +93,8 @@ func (m *middlewareMetricsRepo) GetReview(ctx context.Context, userID string) ([
 	})
 }
 
-func (m *middlewareMetricsRepo) SetIsActive(ctx context.Context, userId string, isActive bool) (*models.User, error) {
+func (m *middlewareMetricsRepo) SetIsActive(ctx context.Context, userID string, isActive bool) (*models.User, error) {
 	return observe(m.histogram, "SetIsActive", func() (*models.User, error) {
-		return m.next.SetIsActive(ctx, userId, isActive)
+		return m.next.SetIsActive(ctx, userID, isActive)
 	})
 }

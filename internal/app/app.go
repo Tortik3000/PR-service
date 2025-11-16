@@ -3,7 +3,6 @@ package app
 import (
 	"context"
 	"errors"
-	"net"
 	"net/http"
 	"os/signal"
 	"syscall"
@@ -21,7 +20,8 @@ import (
 	api "github.com/Tortik3000/PR-service/generated/api/pr-service"
 	controller "github.com/Tortik3000/PR-service/internal/controller/pr-service"
 	"github.com/Tortik3000/PR-service/internal/metrics"
-	"github.com/Tortik3000/PR-service/internal/middleware"
+	repoMiddlerware "github.com/Tortik3000/PR-service/internal/middleware/repo_middleware"
+	restMiddlerware "github.com/Tortik3000/PR-service/internal/middleware/rest_middleware"
 	repository "github.com/Tortik3000/PR-service/internal/repository/pr-service"
 	usecase "github.com/Tortik3000/PR-service/internal/usecase/pr-service"
 )
@@ -52,7 +52,7 @@ func Run(
 	db.SetupPostgres(dbPool, logger)
 
 	repo := repository.NewPostgresRepo(logger, dbPool)
-	metricsRepo := middleware.NewMiddlewareMetricsRepo(repo, metrics.DBQueryLatency)
+	metricsRepo := repoMiddlerware.NewMiddlewareMetricsRepo(repo, metrics.DBQueryLatency)
 
 	transactor := repository.NewTransactor(dbPool, logger)
 	useCases := usecase.NewUseCase(logger, metricsRepo, metricsRepo, metricsRepo, transactor)
@@ -80,15 +80,15 @@ func runPRServer(ctx context.Context, logger *zap.Logger, ctrl api.StrictServerI
 
 	r := chi.NewMux()
 
-	r.Use(middleware.MetricsMiddleware("pr-service"))
-	r.Use(middleware.OpenAPIValidatorMiddleware(router))
+	r.Use(restMiddlerware.MetricsMiddleware("pr-service"))
+	r.Use(restMiddlerware.OpenAPIValidatorMiddleware(router))
 
 	serverInterface := api.NewStrictHandler(ctrl, nil)
 	h := api.HandlerFromMux(serverInterface, r)
 
 	srv := &http.Server{
 		Handler: h,
-		Addr:    net.JoinHostPort(cfg.REST.Host, cfg.REST.Port),
+		Addr:    ":" + cfg.REST.Port,
 	}
 
 	go gracefulShutdown(ctx, srv, logger)

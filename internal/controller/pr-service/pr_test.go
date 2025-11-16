@@ -1,7 +1,6 @@
 package pr_service
 
 import (
-	"context"
 	"errors"
 	"testing"
 
@@ -131,12 +130,12 @@ func TestPostPullRequestCreate(t *testing.T) {
 				mockPR,
 			)
 
-			resp, err := svc.PostPullRequestCreate(context.Background(), api.PostPullRequestCreateRequestObject{
+			resp, err := svc.PostPullRequestCreate(t.Context(), api.PostPullRequestCreateRequestObject{
 				Body: tt.body,
 			})
 
 			if tt.wantErr == nil {
-				require.Nil(t, err)
+				require.NoError(t, err)
 			} else {
 				require.ErrorIs(t, tt.wantErr, err)
 			}
@@ -232,13 +231,13 @@ func TestPostPullRequestMerge(t *testing.T) {
 				mockPR,
 			)
 
-			resp, err := svc.PostPullRequestMerge(context.Background(),
+			resp, err := svc.PostPullRequestMerge(t.Context(),
 				api.PostPullRequestMergeRequestObject{
 					Body: tt.body,
 				})
 
 			if tt.wantErr == nil {
-				require.Nil(t, err)
+				require.NoError(t, err)
 			} else {
 				require.ErrorIs(t, tt.wantErr, err)
 			}
@@ -384,13 +383,13 @@ func TestPostPullRequestReassign(t *testing.T) {
 				mockPR,
 			)
 
-			resp, err := svc.PostPullRequestReassign(context.Background(),
+			resp, err := svc.PostPullRequestReassign(t.Context(),
 				api.PostPullRequestReassignRequestObject{
 					Body: tt.body,
 				})
 
 			if tt.wantErr == nil {
-				require.Nil(t, err)
+				require.NoError(t, err)
 			} else {
 				require.ErrorIs(t, tt.wantErr, err)
 			}

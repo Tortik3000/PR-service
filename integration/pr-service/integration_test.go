@@ -1,5 +1,3 @@
-//go:build pr_service
-
 package pr_service_test
 
 import (
@@ -22,6 +20,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/status"
@@ -39,6 +38,8 @@ const (
 )
 
 func TestMain(m *testing.M) {
+	godotenv.Load(".env.test")
+
 	host := os.Getenv("POSTGRES_HOST")
 	port := os.Getenv("POSTGRES_PORT")
 	dbName := os.Getenv("POSTGRES_DB")

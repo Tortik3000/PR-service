@@ -2,30 +2,17 @@ package metrics
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
+	log "github.com/sirupsen/logrus"
 )
 
 func init() {
-	prometheus.Register(DBTableInsertRate)
-	prometheus.Register(DBTableRowsCount)
-	prometheus.Register(DBQueryLatency)
-
+	err := prometheus.Register(DBQueryLatency)
+	if err != nil {
+		log.Warn("DBQueryLatency already register")
+	}
 }
 
 var (
-	DBTableRowsCount = prometheus.NewGaugeVec(prometheus.GaugeOpts{
-		Namespace: namespace,
-		Subsystem: "db",
-		Name:      "table_num_rows",
-		Help:      "Количество записей в таблицах базы",
-	}, []string{"table"})
-
-	DBTableInsertRate = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Namespace: namespace,
-		Subsystem: "db",
-		Name:      "table_insert_total",
-		Help:      "Общее число вставок в каждую таблицу",
-	}, []string{"table"})
-
 	DBQueryLatency = prometheus.NewHistogramVec(
 		prometheus.HistogramOpts{
 			Namespace: namespace,

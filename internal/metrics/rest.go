@@ -2,12 +2,22 @@ package metrics
 
 import (
 	"github.com/prometheus/client_golang/prometheus"
+	log "github.com/sirupsen/logrus"
 )
 
 func init() {
-	prometheus.Register(RESTRequestsTotal)
-	prometheus.Register(RESTRequestDuration)
-	prometheus.Register(RESTSuccessRequests)
+	err := prometheus.Register(RESTRequestsTotal)
+	if err != nil {
+		log.Warn("RESTRequestsTotal already register")
+	}
+	err = prometheus.Register(RESTRequestDuration)
+	if err != nil {
+		log.Warn("RESTRequestDuration already register")
+	}
+	err = prometheus.Register(RESTSuccessRequests)
+	if err != nil {
+		log.Warn("RESTSuccessRequests already register")
+	}
 }
 
 var (

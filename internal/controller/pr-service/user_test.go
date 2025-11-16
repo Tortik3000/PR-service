@@ -1,7 +1,6 @@
 package pr_service
 
 import (
-	"context"
 	"errors"
 	"testing"
 
@@ -88,13 +87,13 @@ func TestGetUsersGetReview(t *testing.T) {
 				nil,
 			)
 
-			resp, err := svc.GetUsersGetReview(context.Background(),
+			resp, err := svc.GetUsersGetReview(t.Context(),
 				api.GetUsersGetReviewRequestObject{
 					Params: tt.params,
 				})
 
 			if tt.wantErr == nil {
-				require.Nil(t, err)
+				require.NoError(t, err)
 				assert.Equal(t, tt.expected, resp)
 				return
 			}
@@ -180,13 +179,13 @@ func TestPostUsersSetIsActive(t *testing.T) {
 				nil,
 			)
 
-			resp, err := svc.PostUsersSetIsActive(context.Background(),
+			resp, err := svc.PostUsersSetIsActive(t.Context(),
 				api.PostUsersSetIsActiveRequestObject{
 					Body: tt.body,
 				})
 
 			if tt.wantErr == nil {
-				require.Nil(t, err)
+				require.NoError(t, err)
 			} else {
 				require.ErrorIs(t, tt.wantErr, err)
 			}

@@ -5,9 +5,6 @@ import (
 	"net"
 	"net/url"
 	"os"
-
-	"github.com/joho/godotenv"
-	"github.com/spf13/pflag"
 )
 
 type (
@@ -19,7 +16,6 @@ type (
 
 	REST struct {
 		Port string `setEnv:"PORT"`
-		Host string `setEnv:"HOST"`
 	}
 
 	PG struct {
@@ -37,18 +33,10 @@ type (
 )
 
 func New() (*Config, error) {
-	if err := godotenv.Load(".env"); err != nil {
-		return nil, fmt.Errorf("failed to load .env: %w", err)
-	}
-
 	cfg := &Config{}
-
-	pflag.StringVar(&cfg.REST.Port, "port", cfg.REST.Port, "port to listen on")
-	pflag.Parse()
 
 	envVars := map[string]*string{
 		"REST_PORT":         &cfg.REST.Port,
-		"REST_HOST":         &cfg.REST.Host,
 		"POSTGRES_HOST":     &cfg.PG.Host,
 		"POSTGRES_PORT":     &cfg.PG.Port,
 		"POSTGRES_DB":       &cfg.PG.DB,

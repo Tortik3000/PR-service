@@ -22,7 +22,7 @@ func ToAPIPullRequest(pr *models.PR) *api.PullRequest {
 		PullRequestId:     pr.ID,
 		PullRequestName:   pr.Name,
 		AuthorId:          pr.AuthorID,
-		Status:            statusToApiStatus(pr.Status),
+		Status:            statusToAPIStatus(pr.Status),
 		AssignedReviewers: pr.AssignedReviewers,
 		CreatedAt:         pr.CreatedAt,
 		MergedAt:          pr.MergedAt,
@@ -37,11 +37,11 @@ func ToAPIPullRequestShort(pr *models.PRShort) *api.PullRequestShort {
 		PullRequestId:   pr.ID,
 		PullRequestName: pr.Name,
 		AuthorId:        pr.AuthorID,
-		Status:          api.PullRequestShortStatus(statusToApiStatus(pr.Status)),
+		Status:          api.PullRequestShortStatus(statusToAPIStatus(pr.Status)),
 	}
 }
 
-func statusToApiStatus(status models.PRStatus) api.PullRequestStatus {
+func statusToAPIStatus(status models.PRStatus) api.PullRequestStatus {
 	switch status {
 	case models.PRStatusMERGED:
 		return api.PullRequestStatusMERGED

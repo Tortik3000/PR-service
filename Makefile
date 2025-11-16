@@ -2,7 +2,7 @@ LOCAL_BIN := $(CURDIR)/bin
 GOLANGCI_BIN := $(LOCAL_BIN)/golangci-lint
 GOIMPORTS_BIN := $(LOCAL_BIN)/goimports
 GO_TEST=$(LOCAL_BIN)/gotest
-GO_TEST_ARGS=-race -v -tags=integration_test ./...
+GO_TEST_ARGS=-race -v -tags=pr_service ./...
 
 all: generate lint test build
 
