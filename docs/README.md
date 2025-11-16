@@ -127,6 +127,7 @@ make lint
 ```
 
 При разработке на Windows рекомендуется использовать [WSL](https://learn.microsoft.com/en-us/windows/wsl/install)
+
 ---
 
 ## Структура проекта
