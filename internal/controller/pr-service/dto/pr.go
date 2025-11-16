@@ -15,6 +15,9 @@ func ToAPIShortSlice(prs []models.PRShort) (ret []api.PullRequestShort) {
 }
 
 func ToAPIPullRequest(pr *models.PR) *api.PullRequest {
+	if pr == nil {
+		return nil
+	}
 	return &api.PullRequest{
 		PullRequestId:     pr.ID,
 		PullRequestName:   pr.Name,
@@ -27,6 +30,9 @@ func ToAPIPullRequest(pr *models.PR) *api.PullRequest {
 }
 
 func ToAPIPullRequestShort(pr *models.PRShort) *api.PullRequestShort {
+	if pr == nil {
+		return nil
+	}
 	return &api.PullRequestShort{
 		PullRequestId:   pr.ID,
 		PullRequestName: pr.Name,

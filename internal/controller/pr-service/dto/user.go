@@ -6,6 +6,9 @@ import (
 )
 
 func ToAPIUser(user *models.User) *api.User {
+	if user == nil {
+		return nil
+	}
 	return &api.User{
 		UserId:   user.ID,
 		Username: user.Name,

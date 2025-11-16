@@ -29,14 +29,10 @@ func ToAPIMembers(members []models.Member) []api.TeamMember {
 	return ret
 }
 
-func FromAPITeam(team *api.Team) *models.Team {
-	return &models.Team{
-		Name:    team.TeamName,
-		Members: FromAPIMembers(team.Members),
-	}
-}
-
 func ToAPITeam(team *models.Team) *api.Team {
+	if team == nil {
+		return nil
+	}
 	members := make([]api.TeamMember, len(team.Members))
 	for i, m := range team.Members {
 		members[i] = api.TeamMember{

@@ -85,23 +85,6 @@ services:
       GF_SECURITY_ADMIN_PASSWORD: admin
       DS_PROMETHEUS: "${DS_PROMETHEUS}"
 
-  loki:
-    image: grafana/loki:2.9.2
-    ports:
-      - "${LOKI_PORT}:${LOKI_PORT}"
-    command: -config.file=/etc/loki/local-config.yaml
-    networks:
-      - internal
-
-  promtail:
-    image: grafana/promtail:2.9.2
-    volumes:
-      - pr-service-logs:/var/log
-      - ./infra/promtail-config.yaml:/etc/promtail/config.yml
-    command: -config.file=/etc/promtail/config.yml
-    networks:
-      - internal
-
 volumes:
   postgres-data:
   grafana-storage:

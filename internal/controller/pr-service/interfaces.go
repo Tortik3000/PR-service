@@ -6,6 +6,8 @@ import (
 	"github.com/Tortik3000/PR-service/internal/models"
 )
 
+//go:generate mockgen_uber -source=interfaces.go -destination=mocks/use_case_mock.go -package=mocks
+
 type (
 	userUseCase interface {
 		GetReview(ctx context.Context, userID string) ([]models.PRShort, error)

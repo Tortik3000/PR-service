@@ -4,8 +4,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/Tortik3000/PR-service/internal/models"
 	"github.com/prometheus/client_golang/prometheus"
+
+	"github.com/Tortik3000/PR-service/internal/models"
 )
 
 type middlewareMetricsRepo struct {

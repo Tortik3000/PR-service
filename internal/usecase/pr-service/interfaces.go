@@ -3,10 +3,12 @@ package pr_service
 import (
 	"context"
 
-	"github.com/Tortik3000/PR-service/internal/models"
-
 	"go.uber.org/zap"
+
+	"github.com/Tortik3000/PR-service/internal/models"
 )
+
+//go:generate mockgen_uber -source=interfaces.go -destination=mocks/repo_mock.go -package=mocks
 
 type (
 	userRepository interface {

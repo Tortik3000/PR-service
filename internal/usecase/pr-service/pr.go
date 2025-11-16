@@ -3,6 +3,8 @@ package pr_service
 import (
 	"context"
 
+	"go.uber.org/zap"
+
 	"github.com/Tortik3000/PR-service/internal/models"
 	modelsErr "github.com/Tortik3000/PR-service/internal/models/errors"
 )
@@ -12,6 +14,7 @@ func (u *useCase) PullRequestCreate(
 	authorID, prID, prName string,
 ) (*models.PR, error) {
 	var pr *models.PR
+
 	err := u.transactor.WithTx(ctx, func(ctx context.Context) error {
 		teamID, err := u.teamRepository.GetTeamIDByUserID(ctx, authorID)
 		if err != nil {
@@ -57,6 +60,11 @@ func (u *useCase) PullRequestReassign(
 ) (*models.PR, string, error) {
 	var pr *models.PR
 	var newReviewerID string
+	logger := u.logger.With(
+		zap.String("pr_id", prID),
+		zap.String("old_reviewer_id", oldReviewerID),
+		zap.String("new_reviewer_id", newReviewerID),
+	)
 
 	err := u.transactor.WithTx(ctx, func(ctx context.Context) error {
 		teamID, err := u.teamRepository.GetTeamIDByUserID(ctx, oldReviewerID)
@@ -75,6 +83,7 @@ func (u *useCase) PullRequestReassign(
 			}
 		}
 		if !wasReviewer {
+			logger.Error("pr reassign", zap.Error(modelsErr.ErrNotAssigned))
 			return modelsErr.ErrNotAssigned
 		}
 		excludedUsers := []string{pr.AuthorID}
@@ -86,6 +95,7 @@ func (u *useCase) PullRequestReassign(
 		}
 
 		if len(teammates) == 0 {
+			logger.Error("pr reassign", zap.Error(modelsErr.ErrNotActiveCandidate))
 			return modelsErr.ErrNotActiveCandidate
 		}
 

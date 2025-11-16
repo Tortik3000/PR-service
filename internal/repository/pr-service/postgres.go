@@ -32,7 +32,6 @@ func (p *postgresRepo) beginTx(
 	ctx context.Context,
 ) (pgx.Tx, func(txErr error), error) {
 	rollbackFunc := func(error) {}
-
 	tx, err := extractTx(ctx)
 	if err != nil {
 		tx, err = p.db.Begin(ctx)

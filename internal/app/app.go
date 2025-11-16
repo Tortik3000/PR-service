@@ -9,7 +9,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/Tortik3000/PR-service/db"
 	"github.com/getkin/kin-openapi/openapi3"
 	"github.com/getkin/kin-openapi/routers/gorillamux"
 	"github.com/go-chi/chi/v5"
@@ -18,6 +17,7 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/Tortik3000/PR-service/config"
+	"github.com/Tortik3000/PR-service/db"
 	api "github.com/Tortik3000/PR-service/generated/api/pr-service"
 	controller "github.com/Tortik3000/PR-service/internal/controller/pr-service"
 	"github.com/Tortik3000/PR-service/internal/metrics"

@@ -30,7 +30,41 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "thresholds"
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
           },
           "mappings": [
             {
@@ -68,21 +102,17 @@
       },
       "id": 10,
       "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "horizontal",
-        "percentChangeColorMode": "standard",
-        "reduceOptions": {
-          "calcs": [
-            "last"
-          ],
-          "fields": "",
-          "values": false
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
         },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
       },
       "pluginVersion": "12.2.1",
       "targets": [
@@ -93,13 +123,26 @@
           },
           "editorMode": "code",
           "expr": "histogram_quantile(0.999,\n  sum by (le, method, service) (\n    rate(pr_service_rest_request_duration_seconds_bucket{method=~\"$rest_method\"}[5m])\n  )\n)\n",
-          "legendFormat": "{{method}} {{service}} - p95",
+          "legendFormat": "{{method}}  - p999",
           "range": true,
           "refId": "A"
+        },
+        {
+          "datasource": {
+            "type": "prometheus",
+            "uid": "ds-prometheus-1"
+          },
+          "editorMode": "code",
+          "expr": "histogram_quantile(0.95,\n  sum by (le, method, service) (\n    rate(pr_service_rest_request_duration_seconds_bucket{method=~\"$rest_method\"}[5m])\n  )\n)",
+          "hide": false,
+          "instant": false,
+          "legendFormat": "{{method}}  - p95",
+          "range": true,
+          "refId": "B"
         }
       ],
       "title": "SLI: Latency (999-й перцентиль < 300 мс)",
-      "type": "stat"
+      "type": "timeseries"
     },
     {
       "datasource": {
@@ -110,7 +153,41 @@
       "fieldConfig": {
         "defaults": {
           "color": {
-            "mode": "thresholds"
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "axisBorderShow": false,
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "barWidthFactor": 0.6,
+            "drawStyle": "line",
+            "fillOpacity": 0,
+            "gradientMode": "none",
+            "hideFrom": {
+              "legend": false,
+              "tooltip": false,
+              "viz": false
+            },
+            "insertNulls": false,
+            "lineInterpolation": "linear",
+            "lineWidth": 1,
+            "pointSize": 5,
+            "scaleDistribution": {
+              "type": "linear"
+            },
+            "showPoints": "auto",
+            "showValues": false,
+            "spanNulls": false,
+            "stacking": {
+              "group": "A",
+              "mode": "none"
+            },
+            "thresholdsStyle": {
+              "mode": "off"
+            }
           },
           "decimals": 2,
           "mappings": [
@@ -149,21 +226,17 @@
       },
       "id": 11,
       "options": {
-        "colorMode": "value",
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "horizontal",
-        "percentChangeColorMode": "standard",
-        "reduceOptions": {
-          "calcs": [
-            "last"
-          ],
-          "fields": "",
-          "values": false
+        "legend": {
+          "calcs": [],
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
         },
-        "showPercentChange": false,
-        "textMode": "auto",
-        "wideLayout": true
+        "tooltip": {
+          "hideZeros": false,
+          "mode": "single",
+          "sort": "none"
+        }
       },
       "pluginVersion": "12.2.1",
       "targets": [
@@ -181,7 +254,7 @@
         }
       ],
       "title": "SLI: Success Rate (> 99.9%)",
-      "type": "stat"
+      "type": "timeseries"
     },
     {
       "datasource": {
@@ -888,7 +961,7 @@
             "uid": "ds-prometheus-1"
           },
           "editorMode": "code",
-          "expr": "histogram_quantile(0.95, sum by (le, operation) (rate(pr_service_db_query_latency_seconds_bucket{operation=\"$db_operation\"}[5m])))",
+          "expr": "histogram_quantile(0.95, sum by (le, operation) (rate(pr_service_db_query_latency_seconds_bucket{operation=~\"$db_operation\"}[5m])))",
           "legendFormat": "{{operation}} - p95",
           "range": true,
           "refId": "A"
@@ -1002,5 +1075,5 @@
   "timezone": "",
   "title": "PR Service Monitoring Dashboard",
   "uid": "6da5e242-c527-42a4-902e-903ab6846ab4",
-  "version": 3
+  "version": 1
 }

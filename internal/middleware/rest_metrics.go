@@ -5,9 +5,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Tortik3000/PR-service/internal/metrics"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+
+	"github.com/Tortik3000/PR-service/internal/metrics"
 )
 
 func MetricsMiddleware(service string) func(next http.Handler) http.Handler {
@@ -18,12 +19,12 @@ func MetricsMiddleware(service string) func(next http.Handler) http.Handler {
 
 			next.ServeHTTP(ww, r)
 
-			code := strconv.Itoa(ww.Status())
-
 			routePattern := chi.RouteContext(r.Context()).RoutePattern()
-			if routePattern == "" {
-				routePattern = "unknown"
-			}
+			metrics.RESTRequestDuration.
+				WithLabelValues(service, routePattern).
+				Observe(time.Since(start).Seconds())
+
+			code := strconv.Itoa(ww.Status())
 
 			metrics.RESTRequestsTotal.
 				WithLabelValues(service, routePattern, code).
@@ -34,10 +35,6 @@ func MetricsMiddleware(service string) func(next http.Handler) http.Handler {
 					WithLabelValues(service, routePattern, code).
 					Inc()
 			}
-
-			metrics.RESTRequestDuration.
-				WithLabelValues(service, routePattern).
-				Observe(time.Since(start).Seconds())
 		})
 	}
 }
