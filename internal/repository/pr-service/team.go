@@ -27,7 +27,9 @@ func (p *postgresRepo) TeamAdd(
 		logger.Error("beginTx", zap.Error(err))
 		return err
 	}
-	defer rollback(txErr)
+	defer func() {
+		rollback(txErr)
+	}()
 
 	createTeam := p.queryBuilder.Insert("team").
 		Columns("name").
@@ -90,11 +92,6 @@ func (p *postgresRepo) TeamAdd(
 	_, err = tx.Exec(ctx, createUsersStr, args...)
 	if err != nil {
 		logger.Error("insert users", zap.Error(err))
-		return err
-	}
-
-	if err = tx.Commit(ctx); err != nil {
-		logger.Error("commit", zap.Error(err))
 		return err
 	}
 
@@ -178,7 +175,9 @@ func (p *postgresRepo) GetActiveTeammates(
 		logger.Error("beginTx", zap.Error(err))
 		return nil, err
 	}
-	defer rollback(txErr)
+	defer func() {
+		rollback(txErr)
+	}()
 
 	getTeammate := p.queryBuilder.Select("id").
 		From("users").

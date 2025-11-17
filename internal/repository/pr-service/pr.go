@@ -31,7 +31,9 @@ func (p *postgresRepo) PullRequestCreate(
 		logger.Error("beginTx", zap.Error(err))
 		return nil, err
 	}
-	defer rollback(txErr)
+	defer func() {
+		rollback(txErr)
+	}()
 
 	createPR := p.queryBuilder.Insert("pull_request").
 		Columns("id", "name", "author_id").
@@ -156,7 +158,9 @@ func (p *postgresRepo) GetPullRequest(
 		logger.Error("beginTx", zap.Error(err))
 		return nil, err
 	}
-	defer rollback(txErr)
+	defer func() {
+		rollback(txErr)
+	}()
 
 	getPR := p.queryBuilder.Select(
 		"id",
@@ -255,7 +259,9 @@ func (p *postgresRepo) PullRequestReassign(
 		logger.Error("beginTx", zap.Error(err))
 		return err
 	}
-	defer rollback(txErr)
+	defer func() {
+		rollback(txErr)
+	}()
 
 	updateReviewers := p.queryBuilder.Update("assigned_reviewer").
 		Set("user_id", newReviewerID).
